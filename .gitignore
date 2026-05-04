@@ -1,0 +1,49 @@
+# Build outputs
+bin/
+obj/
+out/
+artifacts/
+
+# User-specific IDE files
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider / ReSharper
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Test and coverage outputs
+TestResults/
+*.trx
+coverage/
+coverage-report/
+
+# App local secrets/config overrides (keep templates in repo)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+.env
+.env.*
+
+# Generated files
+*.generated.cs
