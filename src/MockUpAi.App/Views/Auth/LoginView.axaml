@@ -1,0 +1,41 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="MockUpAi.App.Views.Auth.LoginView"
+             x:CompileBindings="False">
+    <Grid RowDefinitions="*,Auto">
+        <Border Width="520"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="#0F172A"
+                CornerRadius="18"
+                Padding="26">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Welcome to MockUpAi" FontSize="28" FontWeight="Bold" Foreground="White" />
+                <TextBlock Text="Sign in as Admin or Candidate" FontSize="14" Foreground="#9FB4FF" />
+
+                <TextBlock Text="User ID" Foreground="#D6E1FF" />
+                <TextBox Text="{Binding UserId, Mode=TwoWay}" PlaceholderText="Enter user id" />
+
+                <TextBlock Text="Password" Foreground="#D6E1FF" />
+                <TextBox Text="{Binding Password, Mode=TwoWay}" PlaceholderText="Enter password" />
+
+                <Button Content="Login"
+                        Command="{Binding LoginCommand}"
+                        Height="42"
+                        Background="#3B82F6"
+                        Foreground="White"
+                        FontWeight="SemiBold" />
+
+                <Border Background="#1E293B" CornerRadius="10" Padding="10">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="1"
+                   HorizontalAlignment="Center"
+                   Margin="0,14,0,0"
+                   Foreground="#6D85B8"
+                   Text="Default admin credentials are configurable in appsettings.json" />
+    </Grid>
+</UserControl>

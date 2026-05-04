@@ -1,0 +1,11 @@
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\bin\Debug\net10.0\MockUpAi.Core.deps.json
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\bin\Debug\net10.0\MockUpAi.Core.dll
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\bin\Debug\net10.0\MockUpAi.Core.pdb
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\MockUpAi.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\MockUpAi.Core.AssemblyInfoInputs.cache
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\MockUpAi.Core.AssemblyInfo.cs
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\MockUpAi.Core.csproj.CoreCompileInputs.cache
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\MockUpAi.Core.dll
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\refint\MockUpAi.Core.dll
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\MockUpAi.Core.pdb
+C:\Users\karti\OneDrive\Desktop\mock\src\MockUpAi.Core\obj\Debug\net10.0\ref\MockUpAi.Core.dll

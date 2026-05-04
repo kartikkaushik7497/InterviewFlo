@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MockUpAi.App/MockUpAi.App.csproj" />
+    <Project Path="src/MockUpAi.Core/MockUpAi.Core.csproj" />
+    <Project Path="src/MockUpAi.Infrastructure/MockUpAi.Infrastructure.csproj" />
+  </Folder>
+</Solution>
