@@ -2,7 +2,7 @@
 using System;
 
 namespace MockUpAi.App;
-//abuzar qwertyuiopasdfghjklzxcvbnm,ewsrdtfgyuh
+
 sealed class Program
 {
     // Initialization code. Don't use any Avalonia, third-party APIs or any
