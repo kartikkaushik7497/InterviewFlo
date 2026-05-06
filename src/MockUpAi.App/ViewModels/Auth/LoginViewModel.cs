@@ -27,6 +27,9 @@ public partial class LoginViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
     private bool _isBusy;
 
+    [ObservableProperty]
+    private bool _revealPassword;
+
     public LoginViewModel(
         IAuthService authService,
         SessionContext sessionContext,
@@ -76,5 +79,11 @@ public partial class LoginViewModel : ViewModelBase
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private void ToggleRevealPassword()
+    {
+        RevealPassword = !RevealPassword;
     }
 }

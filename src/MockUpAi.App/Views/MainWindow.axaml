@@ -8,25 +8,42 @@
         Title="MockUpAi"
         Icon="/Assets/avalonia-logo.ico"
         x:CompileBindings="False">
-    <Border Background="#0B1220" Padding="20">
-        <Grid RowDefinitions="Auto,*" RowSpacing="16">
-            <Border Background="#17233B" CornerRadius="16" Padding="16">
-                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                    <StackPanel Spacing="4">
-                        <TextBlock Text="{Binding AppTitle}" FontSize="30" FontWeight="Bold" Foreground="White" />
-                        <TextBlock Text="{Binding AppSubtitle}" FontSize="14" Foreground="#A3B3D4" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="1"
-                               VerticalAlignment="Center"
-                               Foreground="#9FB4FF"
-                               FontSize="12"
-                               Text="AI-Driven Company Interview Simulation" />
-                </Grid>
-            </Border>
+    <Grid ClipToBounds="True">
+        <Border Background="{DynamicResource ThemeBg}" />
 
-            <Border Grid.Row="1" Background="#111B2F" CornerRadius="16" Padding="16">
-                <ContentControl Content="{Binding CurrentPage}" />
-            </Border>
+        <Grid IsHitTestVisible="False" Opacity="0.12">
+            <Canvas>
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="72" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="144" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="216" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="288" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="360" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="432" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="504" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="576" />
+                <Border Width="2600" Height="1" Background="#2AFFFFFF" Canvas.Top="648" />
+
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="108" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="216" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="324" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="432" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="540" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="648" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="756" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="864" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="972" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="1080" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="1188" />
+                <Border Width="1" Height="1800" Background="#22FFFFFF" Canvas.Left="1296" />
+            </Canvas>
         </Grid>
-    </Border>
+
+        <Canvas IsHitTestVisible="False" Opacity="0.35">
+            <Border Canvas.Left="-100" Canvas.Top="-40" Width="260" Height="260" CornerRadius="130" Background="#2C2563EB" BoxShadow="0 0 100 26 #2C2563EB" />
+            <Border Canvas.Right="-80" Canvas.Top="60" Width="220" Height="220" CornerRadius="110" Background="#26F97316" BoxShadow="0 0 90 24 #26F97316" />
+            <Border Canvas.Left="520" Canvas.Bottom="-120" Width="260" Height="260" CornerRadius="130" Background="#1A22C55E" BoxShadow="0 0 100 26 #1A22C55E" />
+        </Canvas>
+
+        <ContentControl Content="{Binding CurrentPage}" Margin="22" />
+    </Grid>
 </Window>

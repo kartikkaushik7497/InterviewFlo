@@ -3,77 +3,74 @@
              xmlns:dg="using:Avalonia.Controls"
              x:Class="MockUpAi.App.Views.Admin.AdminDashboardView"
              x:CompileBindings="False">
-    <Grid RowDefinitions="Auto,*" RowSpacing="14">
-        <TextBlock Text="Admin Control Center"
-                   FontSize="26"
-                   FontWeight="Bold"
-                   Foreground="White" />
+    <Grid RowDefinitions="Auto,*" RowSpacing="14" Margin="8">
+        <TextBlock Text="Admin Control Center" Classes="PageTitle" />
 
-        <Grid Grid.Row="1" ColumnDefinitions="420,*" ColumnSpacing="16">
+        <Grid Grid.Row="1" ColumnDefinitions="430,*" ColumnSpacing="16">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12">
-                    <Border Background="#0F172A" CornerRadius="14" Padding="14">
+                    <Border Classes="ThemeCard">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Create Candidate" FontSize="18" Foreground="White" FontWeight="SemiBold" />
-                            <TextBlock Text="Candidate ID" Foreground="#CBD5E1" />
+                            <TextBlock Text="Create Candidate" Classes="SectionTitle" />
+                            <TextBlock Text="Candidate ID" Classes="Muted" />
                             <TextBox Text="{Binding CandidateIdInput, Mode=TwoWay}" PlaceholderText="cand_1001" />
 
-                            <TextBlock Text="Temporary Password" Foreground="#CBD5E1" />
+                            <TextBlock Text="Temporary Password" Classes="Muted" />
                             <TextBox Text="{Binding CandidatePasswordInput, Mode=TwoWay}" PlaceholderText="Strong temp password" />
 
-                            <TextBlock Text="Role" Foreground="#CBD5E1" />
+                            <TextBlock Text="Role" Classes="Muted" />
                             <ComboBox ItemsSource="{Binding AvailableRoles}" SelectedItem="{Binding SelectedJobRole, Mode=TwoWay}" />
 
-                            <TextBlock Text="Job Description" Foreground="#CBD5E1" />
+                            <TextBlock Text="Job Description" Classes="Muted" />
                             <TextBox Text="{Binding CandidateJobDescription, Mode=TwoWay}" AcceptsReturn="True" Height="80" TextWrapping="Wrap" PlaceholderText="Role expectations" />
 
-                            <TextBlock Text="Expiry Date (optional)" Foreground="#CBD5E1" />
+                            <TextBlock Text="Expiry Date (optional)" Classes="Muted" />
                             <TextBox Text="{Binding CandidateExpiryDateInput, Mode=TwoWay}" PlaceholderText="yyyy-MM-dd" />
 
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button Content="Generate Random Key + Password" Command="{Binding GenerateRandomCredentialsCommand}" />
-                                <Button Content="Create Candidate" Command="{Binding CreateCandidateCommand}" Background="#2563EB" Foreground="White" FontWeight="SemiBold" />
+                                <Button Content="Create Candidate" Classes="Primary" Command="{Binding CreateCandidateCommand}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
-                    <Border Background="#0F172A" CornerRadius="14" Padding="14">
+                    <Border Classes="ThemeCard">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Edit Selected Candidate" FontSize="18" Foreground="White" FontWeight="SemiBold" />
-                            <TextBlock Text="Role" Foreground="#CBD5E1" />
+                            <TextBlock Text="Edit Selected Candidate" Classes="SectionTitle" />
+                            <TextBlock Text="Role" Classes="Muted" />
                             <TextBox Text="{Binding EditJobRole, Mode=TwoWay}" />
 
-                            <TextBlock Text="Job Description" Foreground="#CBD5E1" />
+                            <TextBlock Text="Job Description" Classes="Muted" />
                             <TextBox Text="{Binding EditJobDescription, Mode=TwoWay}" AcceptsReturn="True" Height="80" TextWrapping="Wrap" />
 
-                            <TextBlock Text="Expiry Date (optional)" Foreground="#CBD5E1" />
+                            <TextBlock Text="Expiry Date (optional)" Classes="Muted" />
                             <TextBox Text="{Binding EditExpiryDateInput, Mode=TwoWay}" PlaceholderText="yyyy-MM-dd" />
 
-                            <CheckBox IsChecked="{Binding EditIsActive, Mode=TwoWay}" Content="Account Active" Foreground="#E2E8F0" />
+                            <CheckBox IsChecked="{Binding EditIsActive, Mode=TwoWay}" Content="Account Active" />
 
-                            <TextBlock Text="Reset Password" Foreground="#CBD5E1" />
+                            <TextBlock Text="Reset Password" Classes="Muted" />
                             <TextBox Text="{Binding ResetPasswordInput, Mode=TwoWay}" PlaceholderText="New password" />
 
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <Button Content="Update" Command="{Binding UpdateCandidateCommand}" />
                                 <Button Content="Reset Password" Command="{Binding ResetCandidatePasswordCommand}" />
-                                <Button Content="Delete" Command="{Binding DeleteCandidateCommand}" />
+                                <Button Content="Delete" Classes="Danger" Command="{Binding DeleteCandidateCommand}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Column="1" Background="#0F172A" CornerRadius="14" Padding="14">
+            <Border Grid.Column="1" Classes="ThemeCard">
                 <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
-                    <TextBlock Text="Candidate Interview Dashboard" FontSize="18" Foreground="White" FontWeight="SemiBold" />
+                    <TextBlock Text="Candidate Interview Dashboard" Classes="SectionTitle" />
 
                     <Grid Grid.Row="1" ColumnDefinitions="2*,2*,1.2*,1.5*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
                         <TextBox Text="{Binding SearchText, Mode=TwoWay}" PlaceholderText="Search candidate or role" />
                         <ComboBox Grid.Column="1" ItemsSource="{Binding RoleFilters}" SelectedItem="{Binding SelectedRoleFilter, Mode=TwoWay}" />
                         <ComboBox Grid.Column="2" ItemsSource="{Binding ActiveFilters}" SelectedItem="{Binding SelectedActiveFilter, Mode=TwoWay}" />
                         <ComboBox Grid.Column="3" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortBy, Mode=TwoWay}" />
-                        <CheckBox Grid.Column="4" IsChecked="{Binding SortDescending, Mode=TwoWay}" Content="Desc" Foreground="#CBD5E1" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="4" IsChecked="{Binding SortDescending, Mode=TwoWay}" Content="Desc" VerticalAlignment="Center" />
                         <Button Grid.Column="5" Content="Apply" Command="{Binding ApplyFiltersCommand}" />
                         <Button Grid.Column="6" Content="CSV" Command="{Binding ExportCsvCommand}" />
                         <Button Grid.Column="7" Content="PDF" Command="{Binding ExportPdfCommand}" />
@@ -98,11 +95,11 @@
                         </dg:DataGrid.Columns>
                     </dg:DataGrid>
 
-                    <Border Grid.Row="3" Background="#1E293B" Padding="10" CornerRadius="10">
+                    <Border Grid.Row="3" Classes="ThemeInset">
                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                             <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
                             <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshCommand}" />
-                            <Button Grid.Column="2" Content="Logout" Command="{Binding LogoutCommand}" />
+                            <Button Grid.Column="2" Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
                         </Grid>
                     </Border>
                 </Grid>
