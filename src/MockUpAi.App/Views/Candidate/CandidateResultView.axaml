@@ -2,40 +2,35 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateResultView"
              x:CompileBindings="False">
-    <Border Background="#0F172A" CornerRadius="14" Padding="24" Width="760" HorizontalAlignment="Center" VerticalAlignment="Center">
+    <Border Classes="ThemeCard" Width="760" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="8" Padding="24">
         <StackPanel Spacing="12">
-            <TextBlock Text="Interview Result" FontSize="30" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" />
+            <TextBlock Text="Interview Result" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
 
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                <TextBlock Text="Candidate ID:" Foreground="#A8B7D9" />
-                <TextBlock Grid.Column="1" Text="{Binding CandidateId}" Foreground="White" />
+                <TextBlock Text="Candidate ID:" Classes="Muted" />
+                <TextBlock Grid.Column="1" Text="{Binding CandidateId}" Foreground="#F3F4F6" />
 
-                <TextBlock Grid.Row="1" Text="Job Role:" Foreground="#A8B7D9" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding JobRole}" Foreground="White" />
+                <TextBlock Grid.Row="1" Text="Job Role:" Classes="Muted" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding JobRole}" Foreground="#F3F4F6" />
 
-                <TextBlock Grid.Row="2" Text="Interview Score:" Foreground="#A8B7D9" />
+                <TextBlock Grid.Row="2" Text="Interview Score:" Classes="Muted" />
                 <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InterviewScore}" Foreground="#4ADE80" FontWeight="Bold" />
 
-                <TextBlock Grid.Row="3" Text="Role Fit Score:" Foreground="#A8B7D9" />
+                <TextBlock Grid.Row="3" Text="Role Fit Score:" Classes="Muted" />
                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding RoleFitScore}" Foreground="#4ADE80" FontWeight="Bold" />
 
-                <TextBlock Grid.Row="4" Text="Questions Answered:" Foreground="#A8B7D9" />
-                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding QuestionsAnswered}" Foreground="White" />
+                <TextBlock Grid.Row="4" Text="Questions Answered:" Classes="Muted" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding QuestionsAnswered}" Foreground="#F3F4F6" />
 
-                <TextBlock Grid.Row="5" Text="Completed At:" Foreground="#A8B7D9" />
-                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CompletedAt}" Foreground="White" />
+                <TextBlock Grid.Row="5" Text="Completed At:" Classes="Muted" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CompletedAt}" Foreground="#F3F4F6" />
             </Grid>
 
-            <Border Background="#1E293B" CornerRadius="10" Padding="12">
+            <Border Classes="ThemeInset" Padding="12">
                 <TextBlock Text="{Binding Verdict}" TextWrapping="Wrap" Foreground="#E2E8F0" FontSize="14" />
             </Border>
 
-            <Button Content="Done"
-                    Command="{Binding DoneCommand}"
-                    Height="42"
-                    Background="#2563EB"
-                    Foreground="White"
-                    FontWeight="SemiBold" />
+            <Button Content="Done" Classes="Primary" Command="{Binding DoneCommand}" Height="42" />
         </StackPanel>
     </Border>
 </UserControl>

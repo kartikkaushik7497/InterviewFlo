@@ -2,24 +2,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateLobbyView"
              x:CompileBindings="False">
-    <Border Background="#0F172A" CornerRadius="14" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760">
+    <Border Classes="ThemeCard" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760" Margin="8">
         <StackPanel Spacing="14" HorizontalAlignment="Center">
-            <TextBlock Text="Interview Waiting Lobby" FontSize="28" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" />
-            <TextBlock Text="Your interview auto-starts after the timer." Foreground="#9FB4FF" HorizontalAlignment="Center" />
+            <TextBlock Text="Interview Waiting Lobby" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
+            <TextBlock Text="Your interview auto-starts after the timer." Classes="Muted" HorizontalAlignment="Center" />
 
-            <Border Background="#1E293B" Padding="20" CornerRadius="12" HorizontalAlignment="Center">
+            <Border Classes="ThemeInset" Padding="20" HorizontalAlignment="Center">
                 <TextBlock Text="{Binding CountdownDisplay}" FontSize="56" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" />
             </Border>
 
-            <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" HorizontalAlignment="Center" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" HorizontalAlignment="Center" TextWrapping="Wrap" />
 
             <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                <Button Content="Start Interview Now"
-                        Command="{Binding StartNowCommand}"
-                        Background="#2563EB"
-                        Foreground="White"
-                        FontWeight="SemiBold" />
-                <Button Content="Logout" Command="{Binding LogoutCommand}" />
+                <Button Content="Start Interview Now" Classes="Primary" Command="{Binding StartNowCommand}" />
+                <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
             </StackPanel>
         </StackPanel>
     </Border>

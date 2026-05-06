@@ -2,30 +2,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateInterviewView"
              x:CompileBindings="False">
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
-        <Border Background="#0F172A" CornerRadius="12" Padding="14">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12" Margin="8">
+        <Border Classes="ThemeCard" Padding="14">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Live AI Interview" FontSize="24" FontWeight="Bold" Foreground="White" />
-                    <TextBlock Text="{Binding JobRole}" Foreground="#9FB4FF" />
-                    <TextBlock Text="{Binding CameraStatus}" Foreground="#A8B7D9" FontSize="12" />
+                    <TextBlock Text="Live AI Interview" Classes="PageTitle" FontSize="24" />
+                    <TextBlock Text="{Binding JobRole}" Classes="Muted" />
+                    <TextBlock Text="{Binding CameraStatus}" Classes="Muted" FontSize="12" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                    <TextBlock Text="Question" Foreground="#A8B7D9" HorizontalAlignment="Right" />
-                    <TextBlock Text="{Binding QuestionNumber}" Foreground="White" FontWeight="Bold" HorizontalAlignment="Right" />
-                    <TextBlock Text="{Binding TotalQuestions}" Foreground="#A8B7D9" HorizontalAlignment="Right" />
+                    <TextBlock Text="Question" Classes="Muted" HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding QuestionNumber}" Foreground="#F3F4F6" FontWeight="Bold" HorizontalAlignment="Right" />
+                    <TextBlock Text="{Binding TotalQuestions}" Classes="Muted" HorizontalAlignment="Right" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <Grid Grid.Row="1" ColumnDefinitions="2*,1.2*,1.1*" ColumnSpacing="12">
-            <Border Background="#0F172A" CornerRadius="12" Padding="14">
+            <Border Classes="ThemeCard" Padding="14">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Current Question" FontSize="18" Foreground="White" FontWeight="SemiBold" />
+                    <TextBlock Text="Current Question" Classes="SectionTitle" />
                     <TextBlock Text="{Binding QuestionPrompt}" TextWrapping="Wrap" Foreground="#E2E8F0" FontSize="15" />
 
-                    <TextBlock Text="Speech-to-Text Transcript" Foreground="#A8B7D9" />
+                    <TextBlock Text="Speech-to-Text Transcript" Classes="Muted" />
                     <TextBox Text="{Binding TranscriptInput, Mode=TwoWay}"
                              AcceptsReturn="True"
                              Height="170"
@@ -35,37 +35,33 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button Content="Start Recording" Command="{Binding StartRecordingCommand}" />
                         <Button Content="Stop + Transcribe" Command="{Binding StopRecordingAndTranscribeCommand}" />
-                        <Button Content="Submit Answer"
-                                Command="{Binding SubmitAnswerCommand}"
-                                Background="#2563EB"
-                                Foreground="White"
-                                FontWeight="SemiBold" />
+                        <Button Content="Submit Answer" Classes="Primary" Command="{Binding SubmitAnswerCommand}" />
                     </StackPanel>
 
-                    <TextBlock Text="{Binding RecordingStatus}" Foreground="#A8B7D9" />
+                    <TextBlock Text="{Binding RecordingStatus}" Classes="Muted" />
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="1" Background="#0F172A" CornerRadius="12" Padding="14">
+            <Border Grid.Column="1" Classes="ThemeCard" Padding="14">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Video Preview" FontSize="18" Foreground="White" FontWeight="SemiBold" />
-                    <Border Background="#020617" CornerRadius="8" Height="240">
+                    <TextBlock Text="Video Preview" Classes="SectionTitle" />
+                    <Border Background="#070B12" BorderBrush="#2E3645" BorderThickness="1" CornerRadius="10" Height="240">
                         <Image Source="{Binding CameraFrame}" Stretch="UniformToFill" />
                     </Border>
                     <Button Content="Restart Camera" Command="{Binding RestartCameraCommand}" />
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="2" Background="#0F172A" CornerRadius="12" Padding="14">
+            <Border Grid.Column="2" Classes="ThemeCard" Padding="14">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Evaluation Panel" FontSize="18" Foreground="White" FontWeight="SemiBold" />
-                    <TextBlock Text="Running Interview Score" Foreground="#A8B7D9" />
+                    <TextBlock Text="Evaluation Panel" Classes="SectionTitle" />
+                    <TextBlock Text="Running Interview Score" Classes="Muted" />
                     <TextBlock Text="{Binding RunningScore}" FontSize="36" FontWeight="Bold" Foreground="#4ADE80" />
 
-                    <TextBlock Text="AI Feedback" Foreground="#A8B7D9" />
+                    <TextBlock Text="AI Feedback" Classes="Muted" />
                     <TextBlock Text="{Binding Feedback}" TextWrapping="Wrap" Foreground="#E2E8F0" />
 
-                    <TextBlock Text="Status" Foreground="#A8B7D9" />
+                    <TextBlock Text="Status" Classes="Muted" />
                     <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Foreground="#E2E8F0" />
                 </StackPanel>
             </Border>
@@ -73,7 +69,7 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
             <Button Content="Finish Interview" Command="{Binding FinishNowCommand}" />
-            <Button Content="Logout" Command="{Binding LogoutCommand}" />
+            <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
         </StackPanel>
     </Grid>
 </UserControl>
