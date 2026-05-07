@@ -33,6 +33,21 @@ public partial class App : Application
             var mainWindow = new MainWindow
             {
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                WindowDecorations = WindowDecorations.Full,
+                ExtendClientAreaToDecorationsHint = false,
+                CanResize = true,
+                CanMinimize = true,
+                CanMaximize = true,
+                ShowInTaskbar = true,
+                WindowState = WindowState.Maximized,
+            };
+
+            mainWindow.Opened += (_, _) =>
+            {
+                if (mainWindow.WindowState != WindowState.Maximized)
+                {
+                    mainWindow.WindowState = WindowState.Maximized;
+                }
             };
 
             desktop.MainWindow = mainWindow;

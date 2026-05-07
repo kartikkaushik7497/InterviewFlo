@@ -7,6 +7,13 @@
         MinHeight="720"
         Title="MockUpAi"
         Icon="/Assets/avalonia-logo.ico"
+        WindowDecorations="Full"
+        ExtendClientAreaToDecorationsHint="False"
+        CanResize="True"
+        CanMinimize="True"
+        CanMaximize="True"
+        ShowInTaskbar="True"
+        WindowState="Maximized"
         x:CompileBindings="False">
     <Grid ClipToBounds="True">
         <Border Background="{DynamicResource ThemeBg}" />
