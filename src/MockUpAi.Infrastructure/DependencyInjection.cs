@@ -15,6 +15,8 @@ public static class DependencyInjection
     {
         services.AddOptions<MongoDbSettings>().Bind(configuration.GetSection("MongoDb"));
         services.AddOptions<OpenAiSettings>().Bind(configuration.GetSection("OpenAi"));
+        services.AddOptions<GeminiSettings>().Bind(configuration.GetSection("Gemini"));
+        services.AddOptions<AzureSpeechSettings>().Bind(configuration.GetSection("AzureSpeech"));
 
         services.AddHttpClient();
 
@@ -59,16 +61,28 @@ public static class DependencyInjection
         services.AddSingleton<ISecretVaultService, SecretVaultService>();
         services.AddSingleton<IReportExportService, ReportExportService>();
         var openAiSettings = configuration.GetSection("OpenAi").Get<OpenAiSettings>() ?? new OpenAiSettings();
+        var azureSpeechSettings = configuration.GetSection("AzureSpeech").Get<AzureSpeechSettings>() ?? new AzureSpeechSettings();
         var openAiEnabled = openAiSettings.Enabled && !string.IsNullOrWhiteSpace(openAiSettings.ApiKey);
+        var azureSpeechEnabled = azureSpeechSettings.Enabled &&
+                                 !string.IsNullOrWhiteSpace(azureSpeechSettings.Region) &&
+                                 (!string.IsNullOrWhiteSpace(azureSpeechSettings.ApiKey) ||
+                                  !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("AZURE_SPEECH_KEY")));
 
-        if (openAiEnabled)
+        services.AddSingleton<HeuristicInterviewAiService>();
+        services.AddSingleton<OpenAiInterviewAiService>();
+        services.AddSingleton<GeminiInterviewAiService>();
+        services.AddSingleton<IInterviewAiService, InterviewAiRouterService>();
+
+        if (azureSpeechEnabled)
         {
-            services.AddSingleton<IInterviewAiService, OpenAiInterviewAiService>();
+            services.AddSingleton<ITranscriptionService, AzureSpeechTranscriptionService>();
+        }
+        else if (openAiEnabled)
+        {
             services.AddSingleton<ITranscriptionService, OpenAiTranscriptionService>();
         }
         else
         {
-            services.AddSingleton<IInterviewAiService, HeuristicInterviewAiService>();
             services.AddSingleton<ITranscriptionService, NoOpTranscriptionService>();
         }
 

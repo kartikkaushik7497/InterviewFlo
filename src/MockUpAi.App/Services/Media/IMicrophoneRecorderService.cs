@@ -10,5 +10,7 @@ public interface IMicrophoneRecorderService
 
     Task<bool> StartRecordingAsync(CancellationToken cancellationToken = default);
 
+    Task<byte[]> GetLiveWavSnapshotAsync(CancellationToken cancellationToken = default);
+
     Task<byte[]> StopRecordingAsync(CancellationToken cancellationToken = default);
 }

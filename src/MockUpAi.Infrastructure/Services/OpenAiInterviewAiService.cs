@@ -1,10 +1,11 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Domain.Entities;
+using MockUpAi.Core.Domain.Enums;
 using MockUpAi.Infrastructure.Configuration;
 
 namespace MockUpAi.Infrastructure.Services;
@@ -31,14 +32,19 @@ internal sealed class OpenAiInterviewAiService : IInterviewAiService
     }
 
     public async Task<IReadOnlyList<InterviewQuestion>> GenerateQuestionsAsync(
+        InterviewAiProvider provider,
         string jobRole,
+        InterviewCategory category,
         string jobDescription,
+        InterviewDifficulty difficulty,
         int count,
         CancellationToken cancellationToken = default)
     {
         var systemPrompt = "You are a senior technical interviewer. Output JSON only.";
         var userPrompt = $$"""
 Create {{count}} interview questions for role: {{jobRole}}.
+Interview category: {{category}}.
+Difficulty level: {{difficulty}}.
 Job description:
 {{jobDescription}}
 
@@ -46,7 +52,10 @@ Rules:
 - Mix conceptual, practical, and scenario-based questions.
 - Keep questions specific to the role and job description.
 - Every question must include a strict evaluation hint.
-- Difficulty should be moderate to advanced.
+- Match the depth to this difficulty:
+  - Fresher: fundamentals and beginner implementation
+  - Experienced: practical debugging and design tradeoffs
+  - Professional: architecture, scale, and leadership-level decisions
 
 Output JSON array with this schema:
 [
@@ -64,7 +73,7 @@ Output JSON array with this schema:
 
             if (questions is null || questions.Count == 0)
             {
-                return await _fallback.GenerateQuestionsAsync(jobRole, jobDescription, count, cancellationToken);
+                return await _fallback.GenerateQuestionsAsync(provider, jobRole, category, jobDescription, difficulty, count, cancellationToken);
             }
 
             return questions
@@ -80,19 +89,143 @@ Output JSON array with this schema:
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OpenAI question generation failed. Falling back to heuristic mode.");
-            return await _fallback.GenerateQuestionsAsync(jobRole, jobDescription, count, cancellationToken);
+            return await _fallback.GenerateQuestionsAsync(provider, jobRole, category, jobDescription, difficulty, count, cancellationToken);
+        }
+    }
+
+    public async Task<string> GenerateProfessionalIntroductionAsync(
+        InterviewAiProvider provider,
+        string candidateName,
+        string jobRole,
+        InterviewCategory category,
+        InterviewDifficulty difficulty,
+        CancellationToken cancellationToken = default)
+    {
+        var systemPrompt = "You are a professional interviewer. Output plain text only.";
+        var userPrompt = $$"""
+Generate a short voice-friendly professional introduction for an AI interviewer.
+Candidate: {{candidateName}}
+Role: {{jobRole}}
+Category: {{category}}
+Difficulty: {{difficulty}}
+
+Rules:
+- Keep it under 55 words.
+- Sound supportive and confident.
+- Mention we will proceed one question at a time.
+""";
+
+        try
+        {
+            var content = await SendPromptAsync(systemPrompt, userPrompt, cancellationToken);
+            return content.Trim();
+        }
+        catch
+        {
+            return await _fallback.GenerateProfessionalIntroductionAsync(provider, candidateName, jobRole, category, difficulty, cancellationToken);
+        }
+    }
+
+    public async Task<string> GenerateEncouragementAsync(
+        InterviewAiProvider provider,
+        string jobRole,
+        InterviewCategory category,
+        InterviewDifficulty difficulty,
+        string candidateTranscript,
+        CancellationToken cancellationToken = default)
+    {
+        var systemPrompt = "You are a professional interviewer. Output plain text only.";
+        var userPrompt = $$"""
+Generate one short supportive phrase after a candidate answer.
+Role: {{jobRole}}
+Category: {{category}}
+Difficulty: {{difficulty}}
+Candidate answer:
+{{candidateTranscript}}
+
+Rules:
+- One sentence, <= 20 words.
+- Encouraging but professional.
+- Do not praise blindly; encourage deeper clarity when needed.
+""";
+
+        try
+        {
+            var content = await SendPromptAsync(systemPrompt, userPrompt, cancellationToken);
+            return content.Trim();
+        }
+        catch
+        {
+            return await _fallback.GenerateEncouragementAsync(provider, jobRole, category, difficulty, candidateTranscript, cancellationToken);
+        }
+    }
+
+    public async Task<InterviewQuestion> GenerateFollowUpQuestionAsync(
+        InterviewAiProvider provider,
+        string jobRole,
+        InterviewCategory category,
+        InterviewDifficulty difficulty,
+        InterviewQuestion previousQuestion,
+        string candidateTranscript,
+        IReadOnlyList<InterviewConversationTurn> conversationTurns,
+        CancellationToken cancellationToken = default)
+    {
+        var systemPrompt = "You are a professional interviewer. Output JSON only.";
+        var historyPreview = string.Join("\n", conversationTurns.TakeLast(6).Select(x => $"{x.Speaker}: {x.Text}"));
+        var userPrompt = $$"""
+Generate one intelligent follow-up interview question.
+Role: {{jobRole}}
+Category: {{category}}
+Difficulty: {{difficulty}}
+
+Previous question:
+{{previousQuestion.Prompt}}
+
+Candidate answer:
+{{candidateTranscript}}
+
+Recent conversation:
+{{historyPreview}}
+
+Return JSON:
+{
+  "prompt": "string",
+  "idealAnswerHint": "string"
+}
+""";
+
+        try
+        {
+            var content = await SendPromptAsync(systemPrompt, userPrompt, cancellationToken);
+            var result = JsonSerializer.Deserialize<OpenAiQuestion>(SanitizeJson(content), JsonOptions());
+            if (result is null || string.IsNullOrWhiteSpace(result.Prompt))
+            {
+                return await _fallback.GenerateFollowUpQuestionAsync(provider, jobRole, category, difficulty, previousQuestion, candidateTranscript, conversationTurns, cancellationToken);
+            }
+
+            return new InterviewQuestion
+            {
+                Prompt = result.Prompt.Trim(),
+                IdealAnswerHint = (result.IdealAnswerHint ?? string.Empty).Trim(),
+            };
+        }
+        catch
+        {
+            return await _fallback.GenerateFollowUpQuestionAsync(provider, jobRole, category, difficulty, previousQuestion, candidateTranscript, conversationTurns, cancellationToken);
         }
     }
 
     public async Task<InterviewAnswerEvaluation> EvaluateAnswerAsync(
+        InterviewAiProvider provider,
         string jobRole,
+        InterviewDifficulty difficulty,
         InterviewQuestion question,
         string candidateTranscript,
         CancellationToken cancellationToken = default)
     {
         var systemPrompt = "You are a strict interview evaluator. Score based on evidence in candidate transcript only. Output JSON only.";
         var userPrompt = $$"""
-Evaluate this answer for role: {{jobRole}}
+Evaluate this answer for role: {{jobRole}} at difficulty: {{difficulty}}.
 
 Question:
 {{question.Prompt}}
@@ -128,7 +261,7 @@ Return JSON:
 
             if (evaluation is null)
             {
-                return await _fallback.EvaluateAnswerAsync(jobRole, question, candidateTranscript, cancellationToken);
+                return await _fallback.EvaluateAnswerAsync(provider, jobRole, difficulty, question, candidateTranscript, cancellationToken);
             }
 
             var weighted = WeightedScore(evaluation);
@@ -141,13 +274,15 @@ Return JSON:
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OpenAI evaluation failed. Falling back to heuristic mode.");
-            return await _fallback.EvaluateAnswerAsync(jobRole, question, candidateTranscript, cancellationToken);
+            return await _fallback.EvaluateAnswerAsync(provider, jobRole, difficulty, question, candidateTranscript, cancellationToken);
         }
     }
 
     public async Task<double> CalculateRoleFitScoreAsync(
+        InterviewAiProvider provider,
         string jobRole,
         string jobDescription,
+        InterviewDifficulty difficulty,
         IReadOnlyList<InterviewQuestionResult> results,
         CancellationToken cancellationToken = default)
     {
@@ -159,6 +294,7 @@ Return JSON:
         var systemPrompt = "You are a hiring panel model. Output JSON only.";
         var userPrompt = $$"""
 Estimate candidate role-fit score for role: {{jobRole}}
+Difficulty level: {{difficulty}}
 Job description:
 {{jobDescription}}
 
@@ -184,7 +320,7 @@ Return JSON:
 
             if (fit is null)
             {
-                return await _fallback.CalculateRoleFitScoreAsync(jobRole, jobDescription, results, cancellationToken);
+                return await _fallback.CalculateRoleFitScoreAsync(provider, jobRole, jobDescription, difficulty, results, cancellationToken);
             }
 
             return Math.Round(Math.Clamp(fit.RoleFitScore, 0, 100), 2);
@@ -192,7 +328,7 @@ Return JSON:
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OpenAI role-fit calculation failed. Falling back to heuristic mode.");
-            return await _fallback.CalculateRoleFitScoreAsync(jobRole, jobDescription, results, cancellationToken);
+            return await _fallback.CalculateRoleFitScoreAsync(provider, jobRole, jobDescription, difficulty, results, cancellationToken);
         }
     }
 

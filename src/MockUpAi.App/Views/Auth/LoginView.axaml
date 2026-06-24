@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Auth.LoginView"
              x:CompileBindings="False">
@@ -171,8 +171,19 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     ToolTip.Tip="Show or hide password">
-                                <Path Width="20" Height="20" Fill="#E5E7EB"
-                                      Data="M1,12 C2.8,8.6 6.7,6 11,6 C15.3,6 19.2,8.6 21,12 C19.2,15.4 15.3,18 11,18 C6.7,18 2.8,15.4 1,12 Z M11,8.4 C9.01,8.4 7.4,10.01 7.4,12 C7.4,13.99 9.01,15.6 11,15.6 C12.99,15.6 14.6,13.99 14.6,12 C14.6,10.01 12.99,8.4 11,8.4 Z" />
+                                <Grid Width="20" Height="20">
+                                    <Path Width="20" Height="20" Fill="#E5E7EB"
+                                          IsVisible="{Binding RevealPassword}"
+                                          Data="M1,12 C2.8,8.6 6.7,6 11,6 C15.3,6 19.2,8.6 21,12 C19.2,15.4 15.3,18 11,18 C6.7,18 2.8,15.4 1,12 Z M11,8.4 C9.01,8.4 7.4,10.01 7.4,12 C7.4,13.99 9.01,15.6 11,15.6 C12.99,15.6 14.6,13.99 14.6,12 C14.6,10.01 12.99,8.4 11,8.4 Z" />
+                                    <Grid IsVisible="{Binding IsPasswordHidden}">
+                                        <Path Width="20" Height="20" Fill="#E5E7EB"
+                                              Data="M1,12 C2.8,8.6 6.7,6 11,6 C15.3,6 19.2,8.6 21,12 C19.2,15.4 15.3,18 11,18 C6.7,18 2.8,15.4 1,12 Z M11,8.4 C9.01,8.4 7.4,10.01 7.4,12 C7.4,13.99 9.01,15.6 11,15.6 C12.99,15.6 14.6,13.99 14.6,12 C14.6,10.01 12.99,8.4 11,8.4 Z" />
+                                        <Path Stroke="#E5E7EB"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              Data="M4,4 L18,18" />
+                                    </Grid>
+                                </Grid>
                             </Button>
                         </Grid>
                     </Border>
@@ -206,7 +217,8 @@
                             BorderThickness="1"
                             CornerRadius="10"
                             Padding="10"
-                            Opacity="0.9">
+                            Opacity="0.9"
+                            IsVisible="{Binding HasStatusMessage}">
                         <TextBlock Text="{Binding StatusMessage}"
                                    Foreground="#D1D5DB"
                                    TextWrapping="Wrap"
@@ -221,6 +233,6 @@
                    HorizontalAlignment="Center"
                    Foreground="#6B7280"
                    FontSize="12"
-                   Text="Credentials and secrets should stay in appsettings placeholders only." />
+                   Text="" />
     </Grid>
 </UserControl>

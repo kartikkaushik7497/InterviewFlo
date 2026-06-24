@@ -12,11 +12,17 @@ public sealed class SessionContext
 
     public string PendingPasswordResetUserId { get; set; } = string.Empty;
 
+    public bool RulesAcknowledged { get; set; }
+
+    public DateTime? RulesAcknowledgedAtUtc { get; set; }
+
     public void Clear()
     {
         CurrentUser = null;
         LastInterview = null;
         RequiresPasswordReset = false;
         PendingPasswordResetUserId = string.Empty;
+        RulesAcknowledged = false;
+        RulesAcknowledgedAtUtc = null;
     }
 }

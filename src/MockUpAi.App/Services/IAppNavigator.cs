@@ -16,6 +16,8 @@ public interface IAppNavigator
 
     Task NavigateToCandidateInterviewAsync();
 
+    Task NavigateToCandidateFeedbackAsync();
+
     Task NavigateToCandidateResultAsync();
 
     Task LogoutAsync();

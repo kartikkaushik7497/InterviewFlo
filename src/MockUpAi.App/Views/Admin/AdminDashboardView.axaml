@@ -24,6 +24,24 @@
                             <TextBlock Text="Job Description" Classes="Muted" />
                             <TextBox Text="{Binding CandidateJobDescription, Mode=TwoWay}" AcceptsReturn="True" Height="80" TextWrapping="Wrap" PlaceholderText="Role expectations" />
 
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Category" Classes="Muted" />
+                                    <ComboBox ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Difficulty" Classes="Muted" />
+                                    <ComboBox ItemsSource="{Binding DifficultyOptions}" SelectedItem="{Binding SelectedDifficulty, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="4">
+                                    <TextBlock Text="AI Provider" Classes="Muted" />
+                                    <ComboBox ItemsSource="{Binding AiProviderOptions}" SelectedItem="{Binding SelectedAiProvider, Mode=TwoWay}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Passing Marks (1-100)" Classes="Muted" />
+                            <TextBox Text="{Binding CandidatePassingScoreInput, Mode=TwoWay}" PlaceholderText="60" />
+
                             <TextBlock Text="Expiry Date (optional)" Classes="Muted" />
                             <TextBox Text="{Binding CandidateExpiryDateInput, Mode=TwoWay}" PlaceholderText="yyyy-MM-dd" />
 
@@ -42,6 +60,24 @@
 
                             <TextBlock Text="Job Description" Classes="Muted" />
                             <TextBox Text="{Binding EditJobDescription, Mode=TwoWay}" AcceptsReturn="True" Height="80" TextWrapping="Wrap" />
+
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Category" Classes="Muted" />
+                                    <ComboBox ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding EditCategory, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Difficulty" Classes="Muted" />
+                                    <ComboBox ItemsSource="{Binding DifficultyOptions}" SelectedItem="{Binding EditDifficulty, Mode=TwoWay}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="4">
+                                    <TextBlock Text="AI Provider" Classes="Muted" />
+                                    <ComboBox ItemsSource="{Binding AiProviderOptions}" SelectedItem="{Binding EditAiProvider, Mode=TwoWay}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Passing Marks (1-100)" Classes="Muted" />
+                            <TextBox Text="{Binding EditPassingScoreInput, Mode=TwoWay}" />
 
                             <TextBlock Text="Expiry Date (optional)" Classes="Muted" />
                             <TextBox Text="{Binding EditExpiryDateInput, Mode=TwoWay}" PlaceholderText="yyyy-MM-dd" />
@@ -85,9 +121,14 @@
                         <dg:DataGrid.Columns>
                             <dg:DataGridTextColumn Header="Candidate ID" Binding="{Binding CandidateId}" Width="*" />
                             <dg:DataGridTextColumn Header="Role" Binding="{Binding JobRole}" Width="*" />
+                            <dg:DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="*" />
+                            <dg:DataGridTextColumn Header="Difficulty" Binding="{Binding Difficulty}" Width="*" />
+                            <dg:DataGridTextColumn Header="Pass Mark" Binding="{Binding PassingScore}" Width="*" />
+                            <dg:DataGridTextColumn Header="AI" Binding="{Binding AiProvider}" Width="*" />
                             <dg:DataGridTextColumn Header="Status" Binding="{Binding InterviewStatus}" Width="*" />
                             <dg:DataGridTextColumn Header="Account" Binding="{Binding AccountStateDisplay}" Width="*" />
                             <dg:DataGridTextColumn Header="Interview Score" Binding="{Binding LatestInterviewScore}" Width="*" />
+                            <dg:DataGridCheckBoxColumn Header="Passed" Binding="{Binding IsPassed}" Width="Auto" />
                             <dg:DataGridTextColumn Header="Role Fit" Binding="{Binding RoleFitScore}" Width="*" />
                             <dg:DataGridTextColumn Header="Questions" Binding="{Binding QuestionsAnswered}" Width="*" />
                             <dg:DataGridTextColumn Header="Expires" Binding="{Binding ExpiresAtDisplay}" Width="*" />

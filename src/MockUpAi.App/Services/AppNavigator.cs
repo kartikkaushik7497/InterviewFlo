@@ -46,13 +46,15 @@ public sealed class AppNavigator : IAppNavigator
     public async Task NavigateToCandidatePermissionsAsync()
     {
         var viewModel = _serviceProvider.GetRequiredService<CandidatePermissionViewModel>();
-        await viewModel.CheckPermissionsAsync();
+        viewModel.PrepareForPermissionRequest();
         _navigationService.Navigate(viewModel);
+        await Task.CompletedTask;
     }
 
     public Task NavigateToCandidateRulesAsync()
     {
         var viewModel = _serviceProvider.GetRequiredService<CandidateRulesViewModel>();
+        viewModel.Initialize();
         _navigationService.Navigate(viewModel);
         return Task.CompletedTask;
     }
@@ -77,6 +79,25 @@ public sealed class AppNavigator : IAppNavigator
         var viewModel = _serviceProvider.GetRequiredService<CandidateResultViewModel>();
         viewModel.LoadFromSession(_sessionContext);
         _navigationService.Navigate(viewModel);
+        return Task.CompletedTask;
+    }
+
+    public Task NavigateToCandidateFeedbackAsync()
+    {
+        try
+        {
+            var viewModel = _serviceProvider.GetRequiredService<CandidateFeedbackViewModel>();
+            viewModel.Initialize();
+            _navigationService.Navigate(viewModel);
+        }
+        catch
+        {
+            // Ensure candidate is never stranded on a blank screen when feedback bootstrap fails.
+            var fallback = _serviceProvider.GetRequiredService<CandidateResultViewModel>();
+            fallback.LoadFromSession(_sessionContext);
+            _navigationService.Navigate(fallback);
+        }
+
         return Task.CompletedTask;
     }
 

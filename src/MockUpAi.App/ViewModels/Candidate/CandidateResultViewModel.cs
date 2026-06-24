@@ -30,6 +30,9 @@ public partial class CandidateResultViewModel : ViewModelBase
     [ObservableProperty]
     private int _questionsAnswered;
 
+    [ObservableProperty]
+    private double _passingScore = 60;
+
     public CandidateResultViewModel(IAppNavigator navigator)
     {
         _navigator = navigator;
@@ -49,6 +52,7 @@ public partial class CandidateResultViewModel : ViewModelBase
             InterviewScore = 0;
             RoleFitScore = 0;
             QuestionsAnswered = 0;
+            PassingScore = 60;
             return;
         }
 
@@ -57,6 +61,7 @@ public partial class CandidateResultViewModel : ViewModelBase
         InterviewScore = session.OverallScore;
         RoleFitScore = session.RoleFitScore;
         QuestionsAnswered = session.QuestionResults.Count;
+        PassingScore = session.PassingScore;
         CompletedAt = session.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-";
         Verdict = BuildVerdict(session);
     }
@@ -69,17 +74,17 @@ public partial class CandidateResultViewModel : ViewModelBase
 
     private static string BuildVerdict(InterviewSession session)
     {
-        if (session.OverallScore >= 80)
+        if (session.OverallScore >= session.PassingScore + 15)
         {
             return "Excellent performance. Strong recommendation.";
         }
 
-        if (session.OverallScore >= 65)
+        if (session.OverallScore >= session.PassingScore)
         {
-            return "Good performance with minor gaps.";
+            return "Passed. Good performance with minor gaps.";
         }
 
-        if (session.OverallScore >= 50)
+        if (session.OverallScore >= Math.Max(0, session.PassingScore - 10))
         {
             return "Average performance. Needs targeted preparation.";
         }

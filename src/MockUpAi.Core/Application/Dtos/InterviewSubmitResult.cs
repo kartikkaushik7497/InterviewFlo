@@ -11,4 +11,6 @@ public sealed class InterviewSubmitResult
     public bool IsInterviewCompleted { get; init; }
 
     public double RunningScore { get; init; }
+
+    public string EncouragementMessage { get; init; } = string.Empty;
 }

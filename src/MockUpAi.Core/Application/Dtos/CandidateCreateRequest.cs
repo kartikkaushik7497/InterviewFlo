@@ -1,4 +1,6 @@
-﻿namespace MockUpAi.Core.Application.Dtos;
+using MockUpAi.Core.Domain.Enums;
+
+namespace MockUpAi.Core.Application.Dtos;
 
 public sealed class CandidateCreateRequest
 {
@@ -9,6 +11,14 @@ public sealed class CandidateCreateRequest
     public string JobRole { get; set; } = string.Empty;
 
     public string JobDescription { get; set; } = string.Empty;
+
+    public InterviewCategory Category { get; set; } = InterviewCategory.Technical;
+
+    public InterviewDifficulty Difficulty { get; set; } = InterviewDifficulty.Fresher;
+
+    public double PassingScore { get; set; } = 60;
+
+    public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.OpenAi;
 
     public DateTime? ExpiresAtUtc { get; set; }
 

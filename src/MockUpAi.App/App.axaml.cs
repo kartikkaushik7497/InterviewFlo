@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MockUpAi.App.Services;
 using MockUpAi.App.Services.Media;
+using MockUpAi.App.Services.Voice;
 using MockUpAi.App.ViewModels;
 using MockUpAi.App.ViewModels.Admin;
 using MockUpAi.App.ViewModels.Auth;
@@ -121,6 +122,7 @@ public partial class App : Application
         services.AddSingleton<IMicrophoneRecorderService, OpenAlMicrophoneRecorderService>();
         services.AddSingleton<ICameraPreviewService, OpenCvCameraPreviewService>();
         services.AddSingleton<IMediaPermissionService, MediaPermissionService>();
+        services.AddSingleton<IInterviewVoiceService, WindowsInterviewVoiceService>();
 
         services.AddSingleton<MainWindowViewModel>();
 
@@ -131,6 +133,7 @@ public partial class App : Application
         services.AddTransient<CandidateRulesViewModel>();
         services.AddTransient<CandidateLobbyViewModel>();
         services.AddTransient<CandidateInterviewViewModel>();
+        services.AddTransient<CandidateFeedbackViewModel>();
         services.AddTransient<CandidateResultViewModel>();
 
         return services.BuildServiceProvider();

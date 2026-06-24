@@ -64,6 +64,30 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
         return await StopRecordingWithOpenAlAsync(cancellationToken);
     }
 
+    public Task<byte[]> GetLiveWavSnapshotAsync(CancellationToken cancellationToken = default)
+    {
+        if (!IsRecording)
+        {
+            return Task.FromResult(Array.Empty<byte>());
+        }
+
+        if (_usingWaveIn)
+        {
+            byte[] pcm;
+            lock (_waveSync)
+            {
+                pcm = _wavePcmBuffer?.ToArray() ?? [];
+            }
+
+            return Task.FromResult(BuildWavFromPcm(pcm, SampleRate, 1, 16));
+        }
+
+        lock (_sync)
+        {
+            return Task.FromResult(BuildWav(_capturedSamples, SampleRate));
+        }
+    }
+
     private bool CanAccessWithWaveIn()
     {
         try

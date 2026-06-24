@@ -21,7 +21,10 @@ public partial class LoginViewModel : ViewModelBase
     private string _password = string.Empty;
 
     [ObservableProperty]
-    private string _statusMessage = "Use the admin account from appsettings to get started.";
+    private string _statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasStatusMessage;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
@@ -29,6 +32,9 @@ public partial class LoginViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _revealPassword;
+
+    [ObservableProperty]
+    private bool _isPasswordHidden = true;
 
     public LoginViewModel(
         IAuthService authService,
@@ -45,6 +51,16 @@ public partial class LoginViewModel : ViewModelBase
         return !IsBusy &&
                !string.IsNullOrWhiteSpace(UserId) &&
                !string.IsNullOrWhiteSpace(Password);
+    }
+
+    partial void OnStatusMessageChanged(string value)
+    {
+        HasStatusMessage = !string.IsNullOrWhiteSpace(value);
+    }
+
+    partial void OnRevealPasswordChanged(bool value)
+    {
+        IsPasswordHidden = !value;
     }
 
     [RelayCommand(CanExecute = nameof(CanLogin))]

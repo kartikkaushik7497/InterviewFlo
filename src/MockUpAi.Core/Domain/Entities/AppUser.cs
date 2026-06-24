@@ -16,6 +16,14 @@ public sealed class AppUser
 
     public string JobDescription { get; set; } = string.Empty;
 
+    public InterviewCategory InterviewCategory { get; set; } = InterviewCategory.Technical;
+
+    public InterviewDifficulty InterviewDifficulty { get; set; } = InterviewDifficulty.Fresher;
+
+    public double PassingScore { get; set; } = 60;
+
+    public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.OpenAi;
+
     public bool IsActive { get; set; } = true;
 
     public DateTime? ExpiresAtUtc { get; set; }

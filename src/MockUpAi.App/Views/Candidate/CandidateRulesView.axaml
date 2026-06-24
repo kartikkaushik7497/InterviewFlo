@@ -10,6 +10,11 @@
                 <ScrollViewer Height="320">
                     <TextBlock Text="{Binding RulesText}" TextWrapping="Wrap" Foreground="#E2E8F0" />
                 </ScrollViewer>
+                <CheckBox IsChecked="{Binding HasAcknowledgedRules, Mode=TwoWay}"
+                          Content="I have read, understood, and agree to the rules and permissions." />
+                <Border Classes="ThemeInset">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
+                </Border>
             </StackPanel>
         </Border>
 

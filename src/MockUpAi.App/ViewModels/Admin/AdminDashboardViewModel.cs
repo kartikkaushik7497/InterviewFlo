@@ -6,6 +6,7 @@ using MockUpAi.App.Models;
 using MockUpAi.App.Services;
 using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Application.Dtos;
+using MockUpAi.Core.Domain.Enums;
 
 namespace MockUpAi.App.ViewModels.Admin;
 
@@ -30,6 +31,18 @@ public partial class AdminDashboardViewModel : ViewModelBase
     private string _selectedJobRole = RoleCatalog.Items[0];
 
     [ObservableProperty]
+    private string _selectedCategory = "Technical";
+
+    [ObservableProperty]
+    private string _selectedDifficulty = "Fresher";
+
+    [ObservableProperty]
+    private string _selectedAiProvider = "OpenAi";
+
+    [ObservableProperty]
+    private string _candidatePassingScoreInput = "60";
+
+    [ObservableProperty]
     private string _candidateExpiryDateInput = string.Empty;
 
     [ObservableProperty]
@@ -41,6 +54,18 @@ public partial class AdminDashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _editJobDescription = string.Empty;
+
+    [ObservableProperty]
+    private string _editCategory = "Technical";
+
+    [ObservableProperty]
+    private string _editDifficulty = "Fresher";
+
+    [ObservableProperty]
+    private string _editAiProvider = "OpenAi";
+
+    [ObservableProperty]
+    private string _editPassingScoreInput = "60";
 
     [ObservableProperty]
     private string _editExpiryDateInput = string.Empty;
@@ -77,6 +102,9 @@ public partial class AdminDashboardViewModel : ViewModelBase
     public ObservableCollection<AdminCandidateRowViewModel> CandidateRows { get; } = [];
 
     public IReadOnlyList<string> AvailableRoles => RoleCatalog.Items;
+    public IReadOnlyList<string> CategoryOptions { get; } = ["Technical", "Behavioral", "Hr", "Management"];
+    public IReadOnlyList<string> DifficultyOptions { get; } = ["Fresher", "Experienced", "Professional"];
+    public IReadOnlyList<string> AiProviderOptions { get; } = ["OpenAi", "Gemini", "Heuristic"];
 
     public IReadOnlyList<string> RoleFilters { get; } = ["All Roles", .. RoleCatalog.Items];
 
@@ -124,6 +152,10 @@ public partial class AdminDashboardViewModel : ViewModelBase
                 Password = CandidatePasswordInput,
                 JobRole = SelectedJobRole,
                 JobDescription = CandidateJobDescription,
+                Category = ParseCategory(SelectedCategory),
+                Difficulty = ParseDifficulty(SelectedDifficulty),
+                AiProvider = ParseProvider(SelectedAiProvider),
+                PassingScore = ParsePassingScore(CandidatePassingScoreInput),
                 ExpiresAtUtc = expiry,
                 MustChangePasswordOnFirstLogin = true,
             };
@@ -139,6 +171,10 @@ public partial class AdminDashboardViewModel : ViewModelBase
             CandidatePasswordInput = string.Empty;
             CandidateJobDescription = string.Empty;
             CandidateExpiryDateInput = string.Empty;
+            CandidatePassingScoreInput = "60";
+            SelectedCategory = "Technical";
+            SelectedDifficulty = "Fresher";
+            SelectedAiProvider = "OpenAi";
 
             await RefreshAsync();
         }
@@ -169,6 +205,10 @@ public partial class AdminDashboardViewModel : ViewModelBase
                 CandidateId = SelectedCandidate.CandidateId,
                 JobRole = string.IsNullOrWhiteSpace(EditJobRole) ? SelectedCandidate.JobRole : EditJobRole,
                 JobDescription = EditJobDescription,
+                Category = ParseCategory(EditCategory),
+                Difficulty = ParseDifficulty(EditDifficulty),
+                AiProvider = ParseProvider(EditAiProvider),
+                PassingScore = ParsePassingScore(EditPassingScoreInput),
                 ExpiresAtUtc = ParseDateInput(EditExpiryDateInput),
             };
 
@@ -319,6 +359,10 @@ public partial class AdminDashboardViewModel : ViewModelBase
         {
             EditJobRole = string.Empty;
             EditJobDescription = string.Empty;
+            EditCategory = "Technical";
+            EditDifficulty = "Fresher";
+            EditAiProvider = "OpenAi";
+            EditPassingScoreInput = "60";
             EditExpiryDateInput = string.Empty;
             EditIsActive = true;
             return;
@@ -326,6 +370,10 @@ public partial class AdminDashboardViewModel : ViewModelBase
 
         EditJobRole = value.JobRole;
         EditJobDescription = string.Empty;
+        EditCategory = value.Category;
+        EditDifficulty = value.Difficulty;
+        EditAiProvider = value.AiProvider;
+        EditPassingScoreInput = value.PassingScore.ToString("0.##");
         EditExpiryDateInput = value.ExpiresAtDisplay == "-" ? string.Empty : value.ExpiresAtDisplay;
         EditIsActive = value.IsActive;
     }
@@ -446,8 +494,13 @@ public partial class AdminDashboardViewModel : ViewModelBase
         {
             CandidateId = row.CandidateId,
             JobRole = row.JobRole,
+            Category = row.Category.ToString(),
+            Difficulty = row.Difficulty.ToString(),
+            PassingScore = row.PassingScore,
+            AiProvider = row.AiProvider.ToString(),
             InterviewStatus = row.InterviewStatus,
             LatestInterviewScore = row.LatestInterviewScore,
+            IsPassed = row.IsPassed,
             RoleFitScore = row.RoleFitScore,
             QuestionsAnswered = row.QuestionsAnswered,
             CompletedAtDisplay = row.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "Pending",
@@ -457,5 +510,36 @@ public partial class AdminDashboardViewModel : ViewModelBase
             MustChangePassword = row.MustChangePassword,
             AccountStateDisplay = accountState,
         };
+    }
+
+    private static InterviewCategory ParseCategory(string value)
+    {
+        return Enum.TryParse<InterviewCategory>(value, true, out var parsed)
+            ? parsed
+            : InterviewCategory.Technical;
+    }
+
+    private static InterviewDifficulty ParseDifficulty(string value)
+    {
+        return Enum.TryParse<InterviewDifficulty>(value, true, out var parsed)
+            ? parsed
+            : InterviewDifficulty.Fresher;
+    }
+
+    private static InterviewAiProvider ParseProvider(string value)
+    {
+        return Enum.TryParse<InterviewAiProvider>(value, true, out var parsed)
+            ? parsed
+            : InterviewAiProvider.OpenAi;
+    }
+
+    private static double ParsePassingScore(string value)
+    {
+        if (double.TryParse(value, out var parsed))
+        {
+            return Math.Clamp(parsed, 1, 100);
+        }
+
+        return 60;
     }
 }

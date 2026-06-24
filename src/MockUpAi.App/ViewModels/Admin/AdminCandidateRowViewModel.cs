@@ -1,4 +1,4 @@
-﻿namespace MockUpAi.App.ViewModels.Admin;
+namespace MockUpAi.App.ViewModels.Admin;
 
 public sealed class AdminCandidateRowViewModel
 {
@@ -6,9 +6,19 @@ public sealed class AdminCandidateRowViewModel
 
     public string JobRole { get; init; } = string.Empty;
 
+    public string Category { get; init; } = "Technical";
+
+    public string Difficulty { get; init; } = "Fresher";
+
+    public double PassingScore { get; init; } = 60;
+
+    public string AiProvider { get; init; } = "OpenAi";
+
     public string InterviewStatus { get; init; } = string.Empty;
 
     public double LatestInterviewScore { get; init; }
+
+    public bool IsPassed { get; init; }
 
     public double RoleFitScore { get; init; }
 

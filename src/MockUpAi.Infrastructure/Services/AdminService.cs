@@ -56,6 +56,10 @@ internal sealed class AdminService : IAdminService
             ActorType = UserActorType.Candidate,
             JobRole = request.JobRole.Trim(),
             JobDescription = request.JobDescription.Trim(),
+            InterviewCategory = request.Category,
+            InterviewDifficulty = request.Difficulty,
+            PassingScore = Math.Clamp(request.PassingScore, 1, 100),
+            AiProvider = request.AiProvider,
             IsActive = true,
             ExpiresAtUtc = request.ExpiresAtUtc,
             MustChangePassword = request.MustChangePasswordOnFirstLogin,
@@ -84,6 +88,10 @@ internal sealed class AdminService : IAdminService
 
         candidate.JobRole = request.JobRole.Trim();
         candidate.JobDescription = request.JobDescription.Trim();
+        candidate.InterviewCategory = request.Category;
+        candidate.InterviewDifficulty = request.Difficulty;
+        candidate.PassingScore = Math.Clamp(request.PassingScore, 1, 100);
+        candidate.AiProvider = request.AiProvider;
         candidate.ExpiresAtUtc = request.ExpiresAtUtc;
         candidate.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -212,8 +220,13 @@ internal sealed class AdminService : IAdminService
             {
                 CandidateId = candidate.UserId,
                 JobRole = candidate.JobRole,
+                Category = candidate.InterviewCategory,
+                Difficulty = candidate.InterviewDifficulty,
+                PassingScore = candidate.PassingScore,
+                AiProvider = candidate.AiProvider,
                 InterviewStatus = latest?.Status.ToString() ?? InterviewStatus.Pending.ToString(),
                 LatestInterviewScore = latest?.OverallScore ?? 0,
+                IsPassed = latest?.IsPassed ?? false,
                 RoleFitScore = latest?.RoleFitScore ?? 0,
                 QuestionsAnswered = latest?.QuestionResults.Count ?? 0,
                 CompletedAtUtc = latest?.CompletedAtUtc,

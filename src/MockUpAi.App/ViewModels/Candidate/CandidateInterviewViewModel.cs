@@ -1,11 +1,14 @@
-﻿using Avalonia.Media.Imaging;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MockUpAi.App.Services;
 using MockUpAi.App.Services.Media;
+using MockUpAi.App.Services.Voice;
 using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Domain.Entities;
+using System.Collections.ObjectModel;
+using System.Text;
 
 namespace MockUpAi.App.ViewModels.Candidate;
 
@@ -17,9 +20,14 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private readonly IMicrophoneRecorderService _microphone;
     private readonly ITranscriptionService _transcription;
     private readonly ICameraPreviewService _camera;
+    private readonly IInterviewVoiceService _voice;
+    private CancellationTokenSource? _liveCaptionCts;
 
     [ObservableProperty]
     private string _jobRole = string.Empty;
+
+    [ObservableProperty]
+    private string _interviewCategory = string.Empty;
 
     [ObservableProperty]
     private string _questionPrompt = string.Empty;
@@ -64,13 +72,22 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     [ObservableProperty]
     private Bitmap? _cameraFrame;
 
+    [ObservableProperty]
+    private string _liveCaption = string.Empty;
+
+    [ObservableProperty]
+    private string _liveTranscriptLog = string.Empty;
+
+    public ObservableCollection<InterviewChatMessage> ChatMessages { get; } = [];
+
     public CandidateInterviewViewModel(
         SessionContext sessionContext,
         IInterviewWorkflowService workflowService,
         IAppNavigator navigator,
         IMicrophoneRecorderService microphone,
         ITranscriptionService transcription,
-        ICameraPreviewService camera)
+        ICameraPreviewService camera,
+        IInterviewVoiceService voice)
     {
         _sessionContext = sessionContext;
         _workflowService = workflowService;
@@ -78,6 +95,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         _microphone = microphone;
         _transcription = transcription;
         _camera = camera;
+        _voice = voice;
     }
 
     public async Task InitializeAsync()
@@ -96,12 +114,25 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         var start = await _workflowService.StartInterviewAsync(candidate);
 
         JobRole = candidate.JobRole;
+        InterviewCategory = candidate.InterviewCategory.ToString();
         TotalQuestions = start.Questions.Count;
         QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
         RunningScore = 0;
         Feedback = "Answer clearly and role-specifically for best scoring.";
         StatusMessage = "Interview started.";
         RecordingStatus = "Not recording";
+        ChatMessages.Clear();
+        LiveCaption = string.Empty;
+        LiveTranscriptLog = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(start.IntroductionMessage))
+        {
+            AddInterviewerMessage(start.IntroductionMessage);
+            StatusMessage = "AI interviewer is introducing the session...";
+            await PauseForNaturalRhythmAsync(start.IntroductionMessage, 300, 900);
+            await _voice.SpeakAsync(start.IntroductionMessage);
+            await PauseForNaturalRhythmAsync(start.IntroductionMessage, 250, 600);
+        }
 
         UpdateCurrentQuestion(_workflowService.GetCurrentQuestion());
         await StartCameraAsync();
@@ -118,10 +149,21 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         IsBusy = true;
         try
         {
-            var submission = await _workflowService.SubmitAnswerAsync(TranscriptInput);
+            var answerText = TranscriptInput.Trim();
+            AddUserMessage(answerText);
+
+            var submission = await _workflowService.SubmitAnswerAsync(answerText);
             Feedback = submission.Result.Feedback;
             RunningScore = submission.RunningScore;
             TranscriptInput = string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(submission.EncouragementMessage))
+            {
+                AddInterviewerMessage(submission.EncouragementMessage);
+                StatusMessage = "AI interviewer is responding...";
+                await PauseForNaturalRhythmAsync(submission.EncouragementMessage, 250, 800);
+                await _voice.SpeakAsync(submission.EncouragementMessage);
+            }
 
             if (submission.IsInterviewCompleted)
             {
@@ -129,6 +171,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
                 return;
             }
 
+            await PauseForNaturalRhythmAsync(submission.NextQuestion?.Prompt ?? string.Empty, 500, 1200);
             QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
             UpdateCurrentQuestion(submission.NextQuestion);
             StatusMessage = "Answer recorded. Next question loaded.";
@@ -163,6 +206,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             IsRecording = true;
             RecordingStatus = "Recording in progress...";
             StatusMessage = "Speak your answer clearly.";
+            StartLiveCaptionLoop();
         }
         finally
         {
@@ -178,6 +222,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         IsBusy = true;
         try
         {
+            StopLiveCaptionLoop();
             var wav = await _microphone.StopRecordingAsync();
             IsRecording = false;
 
@@ -196,6 +241,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             }
 
             TranscriptInput = transcript.Trim();
+            AppendToTranscriptLog(transcript.Trim());
             RecordingStatus = "Transcription complete.";
             StatusMessage = "Review transcript and submit answer.";
         }
@@ -232,6 +278,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     {
         if (IsRecording)
         {
+            StopLiveCaptionLoop();
             await _microphone.StopRecordingAsync();
             IsRecording = false;
         }
@@ -245,6 +292,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     {
         if (IsRecording)
         {
+            StopLiveCaptionLoop();
             await _microphone.StopRecordingAsync();
             IsRecording = false;
         }
@@ -254,8 +302,16 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         await StopCameraAsync();
 
         _sessionContext.LastInterview = session;
-        StatusMessage = "Interview completed. Preparing result card...";
-        await _navigator.NavigateToCandidateResultAsync();
+        StatusMessage = "Interview completed. Preparing feedback page...";
+        try
+        {
+            await _navigator.NavigateToCandidateFeedbackAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Interview completed. Feedback view failed to load: {ex.Message}";
+            await _navigator.NavigateToCandidateResultAsync();
+        }
     }
 
     private async Task StartCameraAsync()
@@ -287,5 +343,145 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private void UpdateCurrentQuestion(InterviewQuestion? question)
     {
         QuestionPrompt = question?.Prompt ?? "All questions completed.";
+        if (question is not null)
+        {
+            AddInterviewerMessage(question.Prompt);
+            _ = _voice.SpeakAsync(question.Prompt);
+        }
+    }
+
+    private void AddInterviewerMessage(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        ChatMessages.Add(new InterviewChatMessage
+        {
+            Sender = "Interviewer",
+            Text = text.Trim(),
+            IsUser = false,
+            BubbleBackground = "#FFFFFF",
+            BubbleBorder = "#D4DDE6",
+            SenderColor = "#0F766E",
+            BubbleAlignment = "Left",
+        });
+    }
+
+    private void AddUserMessage(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        ChatMessages.Add(new InterviewChatMessage
+        {
+            Sender = "You",
+            Text = text.Trim(),
+            IsUser = true,
+            BubbleBackground = "#DCF2E8",
+            BubbleBorder = "#B3E0CF",
+            SenderColor = "#1D5E4E",
+            BubbleAlignment = "Right",
+        });
+    }
+
+    private void StartLiveCaptionLoop()
+    {
+        StopLiveCaptionLoop();
+        _liveCaptionCts = new CancellationTokenSource();
+        var token = _liveCaptionCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            string lastPublished = string.Empty;
+            while (!token.IsCancellationRequested && IsRecording)
+            {
+                try
+                {
+                    await Task.Delay(2200, token);
+                    var snapshot = await _microphone.GetLiveWavSnapshotAsync(token);
+                    if (snapshot.Length < 12000)
+                    {
+                        continue;
+                    }
+
+                    var partial = await _transcription.TranscribeWavAsync(snapshot, $"live_{DateTime.UtcNow:yyyyMMddHHmmss}.wav", token);
+                    if (string.IsNullOrWhiteSpace(partial))
+                    {
+                        continue;
+                    }
+
+                    var cleaned = partial.Trim();
+                    if (cleaned.Equals(lastPublished, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    lastPublished = cleaned;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        LiveCaption = cleaned;
+                        AppendToTranscriptLog(cleaned);
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                    // Keep interview running even if live caption pass fails.
+                }
+            }
+        }, token);
+    }
+
+    private void StopLiveCaptionLoop()
+    {
+        if (_liveCaptionCts is null)
+        {
+            return;
+        }
+
+        _liveCaptionCts.Cancel();
+        _liveCaptionCts.Dispose();
+        _liveCaptionCts = null;
+    }
+
+    private void AppendToTranscriptLog(string line)
+    {
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            return;
+        }
+
+        if (LiveTranscriptLog.Contains(line, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(LiveTranscriptLog))
+        {
+            LiveTranscriptLog = line;
+            return;
+        }
+
+        var sb = new StringBuilder(LiveTranscriptLog.Length + line.Length + 2);
+        sb.Append(LiveTranscriptLog);
+        sb.AppendLine();
+        sb.Append(line);
+        LiveTranscriptLog = sb.ToString();
+    }
+
+    private static async Task PauseForNaturalRhythmAsync(string text, int minMs, int maxMs)
+    {
+        var words = string.IsNullOrWhiteSpace(text)
+            ? 0
+            : text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        var dynamicMs = Math.Clamp(words * 60, minMs, maxMs);
+        await Task.Delay(dynamicMs);
     }
 }
