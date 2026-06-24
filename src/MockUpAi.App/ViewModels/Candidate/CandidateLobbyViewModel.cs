@@ -7,16 +7,17 @@ namespace MockUpAi.App.ViewModels.Candidate;
 
 public partial class CandidateLobbyViewModel : ViewModelBase
 {
+    private const int DefaultLobbySeconds = 15;
     private readonly IAppNavigator _navigator;
     private readonly DispatcherTimer _timer;
     private bool _navigating;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CountdownDisplay))]
-    private int _remainingSeconds = 300;
+    private int _remainingSeconds = DefaultLobbySeconds;
 
     [ObservableProperty]
-    private string _statusMessage = "Interview starts automatically in 5 minutes.";
+    private string _statusMessage = "Interview starts automatically in a few seconds.";
 
     public string CountdownDisplay => TimeSpan.FromSeconds(RemainingSeconds).ToString("mm\\:ss");
 
@@ -33,8 +34,8 @@ public partial class CandidateLobbyViewModel : ViewModelBase
     public void StartTimer()
     {
         _navigating = false;
-        RemainingSeconds = 300;
-        StatusMessage = "Interview starts automatically in 5 minutes.";
+        RemainingSeconds = DefaultLobbySeconds;
+        StatusMessage = "Interview starts automatically in a few seconds.";
         _timer.Start();
     }
 

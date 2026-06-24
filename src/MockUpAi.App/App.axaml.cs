@@ -122,6 +122,7 @@ public partial class App : Application
         services.AddSingleton<IMicrophoneRecorderService, OpenAlMicrophoneRecorderService>();
         services.AddSingleton<ICameraPreviewService, OpenCvCameraPreviewService>();
         services.AddSingleton<IMediaPermissionService, MediaPermissionService>();
+        services.AddOptions<ElevenLabsVoiceSettings>().Bind(configuration.GetSection("ElevenLabs"));
         services.AddSingleton<IInterviewVoiceService, WindowsInterviewVoiceService>();
 
         services.AddSingleton<MainWindowViewModel>();

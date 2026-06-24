@@ -23,6 +23,7 @@ public sealed class AppUser
     public double PassingScore { get; set; } = 60;
 
     public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.OpenAi;
+    public string InterviewerVoiceProfile { get; set; } = "Windows:David";
 
     public bool IsActive { get; set; } = true;
 

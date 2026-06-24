@@ -5,7 +5,7 @@
     <Border Classes="ThemeCard" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760" Margin="8">
         <StackPanel Spacing="14" HorizontalAlignment="Center">
             <TextBlock Text="Interview Waiting Lobby" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
-            <TextBlock Text="Your interview auto-starts after the timer." Classes="Muted" HorizontalAlignment="Center" />
+            <TextBlock Text="Your interview auto-starts quickly after the timer." Classes="Muted" HorizontalAlignment="Center" />
 
             <Border Classes="ThemeInset" Padding="20" HorizontalAlignment="Center">
                 <TextBlock Text="{Binding CountdownDisplay}" FontSize="56" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" />

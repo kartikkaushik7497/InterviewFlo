@@ -60,6 +60,7 @@ internal sealed class AdminService : IAdminService
             InterviewDifficulty = request.Difficulty,
             PassingScore = Math.Clamp(request.PassingScore, 1, 100),
             AiProvider = request.AiProvider,
+            InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "Windows:David" : request.InterviewerVoiceProfile.Trim(),
             IsActive = true,
             ExpiresAtUtc = request.ExpiresAtUtc,
             MustChangePassword = request.MustChangePasswordOnFirstLogin,
@@ -92,6 +93,7 @@ internal sealed class AdminService : IAdminService
         candidate.InterviewDifficulty = request.Difficulty;
         candidate.PassingScore = Math.Clamp(request.PassingScore, 1, 100);
         candidate.AiProvider = request.AiProvider;
+        candidate.InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "Windows:David" : request.InterviewerVoiceProfile.Trim();
         candidate.ExpiresAtUtc = request.ExpiresAtUtc;
         candidate.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -224,6 +226,7 @@ internal sealed class AdminService : IAdminService
                 Difficulty = candidate.InterviewDifficulty,
                 PassingScore = candidate.PassingScore,
                 AiProvider = candidate.AiProvider,
+                InterviewerVoiceProfile = candidate.InterviewerVoiceProfile,
                 InterviewStatus = latest?.Status.ToString() ?? InterviewStatus.Pending.ToString(),
                 LatestInterviewScore = latest?.OverallScore ?? 0,
                 IsPassed = latest?.IsPassed ?? false,

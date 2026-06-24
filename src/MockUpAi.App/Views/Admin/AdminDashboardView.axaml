@@ -38,6 +38,8 @@
                                     <ComboBox ItemsSource="{Binding AiProviderOptions}" SelectedItem="{Binding SelectedAiProvider, Mode=TwoWay}" />
                                 </StackPanel>
                             </Grid>
+                            <TextBlock Text="Interviewer Voice" Classes="Muted" />
+                            <ComboBox ItemsSource="{Binding InterviewerVoiceOptions}" SelectedItem="{Binding SelectedInterviewerVoice, Mode=TwoWay}" />
 
                             <TextBlock Text="Passing Marks (1-100)" Classes="Muted" />
                             <TextBox Text="{Binding CandidatePassingScoreInput, Mode=TwoWay}" PlaceholderText="60" />
@@ -75,6 +77,8 @@
                                     <ComboBox ItemsSource="{Binding AiProviderOptions}" SelectedItem="{Binding EditAiProvider, Mode=TwoWay}" />
                                 </StackPanel>
                             </Grid>
+                            <TextBlock Text="Interviewer Voice" Classes="Muted" />
+                            <ComboBox ItemsSource="{Binding InterviewerVoiceOptions}" SelectedItem="{Binding EditInterviewerVoice, Mode=TwoWay}" />
 
                             <TextBlock Text="Passing Marks (1-100)" Classes="Muted" />
                             <TextBox Text="{Binding EditPassingScoreInput, Mode=TwoWay}" />
@@ -125,6 +129,7 @@
                             <dg:DataGridTextColumn Header="Difficulty" Binding="{Binding Difficulty}" Width="*" />
                             <dg:DataGridTextColumn Header="Pass Mark" Binding="{Binding PassingScore}" Width="*" />
                             <dg:DataGridTextColumn Header="AI" Binding="{Binding AiProvider}" Width="*" />
+                            <dg:DataGridTextColumn Header="Voice" Binding="{Binding InterviewerVoiceProfile}" Width="*" />
                             <dg:DataGridTextColumn Header="Status" Binding="{Binding InterviewStatus}" Width="*" />
                             <dg:DataGridTextColumn Header="Account" Binding="{Binding AccountStateDisplay}" Width="*" />
                             <dg:DataGridTextColumn Header="Interview Score" Binding="{Binding LatestInterviewScore}" Width="*" />

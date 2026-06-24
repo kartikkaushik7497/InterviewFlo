@@ -38,6 +38,8 @@ public partial class AdminDashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _selectedAiProvider = "OpenAi";
+    [ObservableProperty]
+    private string _selectedInterviewerVoice = "Windows:David";
 
     [ObservableProperty]
     private string _candidatePassingScoreInput = "60";
@@ -63,6 +65,8 @@ public partial class AdminDashboardViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _editAiProvider = "OpenAi";
+    [ObservableProperty]
+    private string _editInterviewerVoice = "Windows:David";
 
     [ObservableProperty]
     private string _editPassingScoreInput = "60";
@@ -105,6 +109,8 @@ public partial class AdminDashboardViewModel : ViewModelBase
     public IReadOnlyList<string> CategoryOptions { get; } = ["Technical", "Behavioral", "Hr", "Management"];
     public IReadOnlyList<string> DifficultyOptions { get; } = ["Fresher", "Experienced", "Professional"];
     public IReadOnlyList<string> AiProviderOptions { get; } = ["OpenAi", "Gemini", "Heuristic"];
+    public IReadOnlyList<string> InterviewerVoiceOptions { get; } =
+        ["Windows:David", "Windows:Zira", "ElevenLabs:Patrick", "ElevenLabs:Neal"];
 
     public IReadOnlyList<string> RoleFilters { get; } = ["All Roles", .. RoleCatalog.Items];
 
@@ -155,6 +161,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
                 Category = ParseCategory(SelectedCategory),
                 Difficulty = ParseDifficulty(SelectedDifficulty),
                 AiProvider = ParseProvider(SelectedAiProvider),
+                InterviewerVoiceProfile = SelectedInterviewerVoice,
                 PassingScore = ParsePassingScore(CandidatePassingScoreInput),
                 ExpiresAtUtc = expiry,
                 MustChangePasswordOnFirstLogin = true,
@@ -175,6 +182,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
             SelectedCategory = "Technical";
             SelectedDifficulty = "Fresher";
             SelectedAiProvider = "OpenAi";
+            SelectedInterviewerVoice = "Windows:David";
 
             await RefreshAsync();
         }
@@ -208,6 +216,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
                 Category = ParseCategory(EditCategory),
                 Difficulty = ParseDifficulty(EditDifficulty),
                 AiProvider = ParseProvider(EditAiProvider),
+                InterviewerVoiceProfile = EditInterviewerVoice,
                 PassingScore = ParsePassingScore(EditPassingScoreInput),
                 ExpiresAtUtc = ParseDateInput(EditExpiryDateInput),
             };
@@ -362,6 +371,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
             EditCategory = "Technical";
             EditDifficulty = "Fresher";
             EditAiProvider = "OpenAi";
+            EditInterviewerVoice = "Windows:David";
             EditPassingScoreInput = "60";
             EditExpiryDateInput = string.Empty;
             EditIsActive = true;
@@ -373,6 +383,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
         EditCategory = value.Category;
         EditDifficulty = value.Difficulty;
         EditAiProvider = value.AiProvider;
+        EditInterviewerVoice = value.InterviewerVoiceProfile;
         EditPassingScoreInput = value.PassingScore.ToString("0.##");
         EditExpiryDateInput = value.ExpiresAtDisplay == "-" ? string.Empty : value.ExpiresAtDisplay;
         EditIsActive = value.IsActive;
@@ -498,6 +509,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
             Difficulty = row.Difficulty.ToString(),
             PassingScore = row.PassingScore,
             AiProvider = row.AiProvider.ToString(),
+            InterviewerVoiceProfile = row.InterviewerVoiceProfile,
             InterviewStatus = row.InterviewStatus,
             LatestInterviewScore = row.LatestInterviewScore,
             IsPassed = row.IsPassed,

@@ -115,6 +115,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
 
         JobRole = candidate.JobRole;
         InterviewCategory = candidate.InterviewCategory.ToString();
+        _voice.SetVoiceProfile(candidate.InterviewerVoiceProfile);
         TotalQuestions = start.Questions.Count;
         QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
         RunningScore = 0;
@@ -258,12 +259,21 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     [RelayCommand]
     private async Task FinishNowAsync()
     {
-        if (!_workflowService.HasActiveInterview())
+        try
         {
-            return;
-        }
+            if (!_workflowService.HasActiveInterview())
+            {
+                await _navigator.NavigateToCandidateFeedbackAsync();
+                return;
+            }
 
-        await CompleteInterviewAsync();
+            await CompleteInterviewAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not complete interview cleanly: {ex.Message}";
+            await _navigator.NavigateToCandidateResultAsync();
+        }
     }
 
     [RelayCommand]
@@ -290,27 +300,37 @@ public partial class CandidateInterviewViewModel : ViewModelBase
 
     private async Task CompleteInterviewAsync()
     {
-        if (IsRecording)
-        {
-            StopLiveCaptionLoop();
-            await _microphone.StopRecordingAsync();
-            IsRecording = false;
-        }
-
-        var session = await _workflowService.FinishInterviewAsync();
-        _workflowService.Reset();
-        await StopCameraAsync();
-
-        _sessionContext.LastInterview = session;
-        StatusMessage = "Interview completed. Preparing feedback page...";
         try
         {
+            if (IsRecording)
+            {
+                StopLiveCaptionLoop();
+                await _microphone.StopRecordingAsync();
+                IsRecording = false;
+            }
+
+            var session = await _workflowService.FinishInterviewAsync();
+            _sessionContext.LastInterview = session;
+
+            StatusMessage = "Interview completed. Preparing feedback page...";
             await _navigator.NavigateToCandidateFeedbackAsync();
         }
         catch (Exception ex)
         {
             StatusMessage = $"Interview completed. Feedback view failed to load: {ex.Message}";
-            await _navigator.NavigateToCandidateResultAsync();
+            try
+            {
+                await _navigator.NavigateToCandidateResultAsync();
+            }
+            catch
+            {
+                await _navigator.NavigateToLoginAsync();
+            }
+        }
+        finally
+        {
+            _workflowService.Reset();
+            await StopCameraAsync();
         }
     }
 

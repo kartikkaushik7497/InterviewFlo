@@ -96,27 +96,45 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
         _session.FlowState = InterviewFlowState.CandidateAnswer;
         var answerText = transcript.Trim();
         AddTurn("Candidate", "answer", answerText);
+        var isSkip = IsSkipOrUnknownResponse(answerText);
 
         var question = _questions[_currentIndex];
-        var evaluation = await _interviewAiService.EvaluateAnswerAsync(
-            _session.AiProvider,
-            _session.JobRole,
-            _session.Difficulty,
-            question,
-            answerText,
-            cancellationToken);
+        InterviewAnswerEvaluation evaluation;
+        double keywordScore;
+        double blendedScore;
+        bool isCorrect;
+        string encouragement;
 
-        var keywordScore = CalculateKeywordScore(question.IdealAnswerHint, answerText);
-        var blendedScore = Math.Round((evaluation.Score * 0.75) + (keywordScore * 0.25), 2);
-        var isCorrect = blendedScore >= _session.PassingScore;
+        if (isSkip)
+        {
+            evaluation = new InterviewAnswerEvaluation(false, 0, "Candidate skipped or could not answer this question.");
+            keywordScore = 0;
+            blendedScore = 0;
+            isCorrect = false;
+            encouragement = "No problem. I will mark this one as skipped and move to the next question.";
+        }
+        else
+        {
+            evaluation = await _interviewAiService.EvaluateAnswerAsync(
+                _session.AiProvider,
+                _session.JobRole,
+                _session.Difficulty,
+                question,
+                answerText,
+                cancellationToken);
 
-        var encouragement = await _interviewAiService.GenerateEncouragementAsync(
-            _session.AiProvider,
-            _session.JobRole,
-            _session.Category,
-            _session.Difficulty,
-            answerText,
-            cancellationToken);
+            keywordScore = CalculateKeywordScore(question.IdealAnswerHint, answerText);
+            blendedScore = Math.Round((evaluation.Score * 0.75) + (keywordScore * 0.25), 2);
+            isCorrect = blendedScore >= _session.PassingScore;
+
+            encouragement = await _interviewAiService.GenerateEncouragementAsync(
+                _session.AiProvider,
+                _session.JobRole,
+                _session.Category,
+                _session.Difficulty,
+                answerText,
+                cancellationToken);
+        }
         _session.FlowState = InterviewFlowState.Encourage;
         AddTurn("AI Interviewer", "encouragement", encouragement);
 
@@ -128,7 +146,9 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             CandidateTranscript = answerText,
             IsCorrect = isCorrect,
             ScoreAwarded = Math.Clamp(blendedScore, 0, 100),
-            Feedback = $"{encouragement} {evaluation.Feedback} Keyword match: {keywordScore:0.##}/100.",
+            Feedback = isSkip
+                ? "Marked as skipped. Score: 0/100."
+                : $"{encouragement} {evaluation.Feedback} Keyword match: {keywordScore:0.##}/100.",
         };
 
         _session.QuestionResults.Add(result);
@@ -140,15 +160,18 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
         if (_currentIndex < _session.PlannedQuestionCount)
         {
             _session.FlowState = InterviewFlowState.FollowUp;
-            nextQuestion = await _interviewAiService.GenerateFollowUpQuestionAsync(
-                _session.AiProvider,
-                _session.JobRole,
-                _session.Category,
-                _session.Difficulty,
-                question,
-                answerText,
-                _session.ConversationTurns,
-                cancellationToken);
+            if (!isSkip)
+            {
+                nextQuestion = await _interviewAiService.GenerateFollowUpQuestionAsync(
+                    _session.AiProvider,
+                    _session.JobRole,
+                    _session.Category,
+                    _session.Difficulty,
+                    question,
+                    answerText,
+                    _session.ConversationTurns,
+                    cancellationToken);
+            }
 
             if (string.IsNullOrWhiteSpace(nextQuestion.Prompt))
             {
@@ -262,5 +285,31 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             .Split([' ', ',', '.', ';', ':', '-', '_', '\n', '\r', '\t', '(', ')'], StringSplitOptions.RemoveEmptyEntries)
             .Where(x => x.Length > 2)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSkipOrUnknownResponse(string answerText)
+    {
+        if (string.IsNullOrWhiteSpace(answerText))
+        {
+            return true;
+        }
+
+        var normalized = answerText.Trim().ToLowerInvariant();
+        var skipPhrases = new[]
+        {
+            "skip",
+            "i dont know",
+            "i don't know",
+            "dont know",
+            "do not know",
+            "no idea",
+            "not sure",
+            "can't answer",
+            "cannot answer",
+            "pass",
+        };
+
+        return skipPhrases.Any(phrase => normalized.Equals(phrase, StringComparison.OrdinalIgnoreCase) ||
+                                         normalized.StartsWith(phrase + " ", StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -13,6 +13,7 @@ public sealed class AdminCandidateRowViewModel
     public double PassingScore { get; init; } = 60;
 
     public string AiProvider { get; init; } = "OpenAi";
+    public string InterviewerVoiceProfile { get; init; } = "Windows:David";
 
     public string InterviewStatus { get; init; } = string.Empty;
 
