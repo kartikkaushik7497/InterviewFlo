@@ -17,7 +17,15 @@ internal sealed class StartupSeeder : IStartupSeeder
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         var adminUserId = _configuration["SeedAdmin:UserId"] ?? "admin";
-        var adminPassword = _configuration["SeedAdmin:Password"] ?? "Admin@123";
+        var adminPassword = _configuration["SeedAdmin:Password"] ??
+                            Environment.GetEnvironmentVariable("MOCKUPAI_SEED_ADMIN_PASSWORD");
+
+        if (string.IsNullOrWhiteSpace(adminPassword))
+        {
+            throw new InvalidOperationException(
+                "SeedAdmin:Password or MOCKUPAI_SEED_ADMIN_PASSWORD must be configured to seed the first admin account.");
+        }
+
         var hash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
 
         await _users.SeedAdminAsync(adminUserId, hash, cancellationToken);

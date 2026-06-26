@@ -118,12 +118,6 @@ public partial class CandidateFeedbackViewModel : ViewModelBase
     [RelayCommand]
     private async Task ContinueAsync()
     {
-        if (!IsSubmitted)
-        {
-            StatusMessage = "Submit feedback before continuing.";
-            return;
-        }
-
         await _navigator.NavigateToCandidateResultAsync();
     }
 

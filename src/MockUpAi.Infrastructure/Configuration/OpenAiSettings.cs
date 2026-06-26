@@ -10,5 +10,7 @@ public sealed class OpenAiSettings
 
     public string TranscriptionModel { get; set; } = "gpt-4o-mini-transcribe";
 
+    public string SpeechModel { get; set; } = "gpt-4o-mini-tts";
+
     public string BaseUrl { get; set; } = "https://api.openai.com/v1";
 }

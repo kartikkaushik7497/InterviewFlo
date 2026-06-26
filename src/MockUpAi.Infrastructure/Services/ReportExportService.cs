@@ -15,7 +15,7 @@ internal sealed class ReportExportService : IReportExportService
         Directory.CreateDirectory(request.OutputDirectory);
 
         var extension = request.Format.Equals("pdf", StringComparison.OrdinalIgnoreCase) ? "pdf" : "csv";
-        var filePath = Path.Combine(request.OutputDirectory, $"MockUpAi_Report_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}");
+        var filePath = Path.Combine(request.OutputDirectory, $"InterviewFlo_Report_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}");
 
         if (extension == "csv")
         {
@@ -30,7 +30,7 @@ internal sealed class ReportExportService : IReportExportService
     private static async Task ExportCsvAsync(IReadOnlyList<CandidateDashboardRow> rows, string filePath, CancellationToken cancellationToken)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("CandidateId,JobRole,Status,InterviewScore,RoleFitScore,QuestionsAnswered,IsActive,IsExpired,ExpiresAtUtc,CompletedAtUtc");
+        sb.AppendLine("CandidateId,JobRole,Status,InterviewScore,RoleFitScore,TechnicalScore,CommunicationScore,DepthScore,RelevanceScore,QuestionsAnswered,IsActive,IsExpired,ExpiresAtUtc,CompletedAtUtc");
 
         foreach (var row in rows)
         {
@@ -40,6 +40,10 @@ internal sealed class ReportExportService : IReportExportService
                 Csv(row.InterviewStatus),
                 row.LatestInterviewScore.ToString("0.00", CultureInfo.InvariantCulture),
                 row.RoleFitScore.ToString("0.00", CultureInfo.InvariantCulture),
+                row.TechnicalScore.ToString("0.00", CultureInfo.InvariantCulture),
+                row.CommunicationScore.ToString("0.00", CultureInfo.InvariantCulture),
+                row.DepthScore.ToString("0.00", CultureInfo.InvariantCulture),
+                row.RelevanceScore.ToString("0.00", CultureInfo.InvariantCulture),
                 row.QuestionsAnswered.ToString(CultureInfo.InvariantCulture),
                 row.IsActive,
                 row.IsExpired,
@@ -63,7 +67,7 @@ internal sealed class ReportExportService : IReportExportService
 
                 page.Header().Column(column =>
                 {
-                    column.Item().Text("MockUpAi Candidate Interview Report").Bold().FontSize(18).FontColor(Colors.Blue.Darken2);
+                    column.Item().Text("InterviewFlo Candidate Interview Report").Bold().FontSize(18).FontColor(Colors.Blue.Darken2);
                     column.Item().Text($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}").FontColor(Colors.Grey.Darken1);
                 });
 
@@ -78,6 +82,8 @@ internal sealed class ReportExportService : IReportExportService
                         cols.RelativeColumn(1);
                         cols.RelativeColumn(1);
                         cols.RelativeColumn(1);
+                        cols.RelativeColumn(1);
+                        cols.RelativeColumn(1);
                     });
 
                     table.Header(header =>
@@ -87,6 +93,8 @@ internal sealed class ReportExportService : IReportExportService
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Status").Bold();
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Score").Bold();
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Fit").Bold();
+                        header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Tech").Bold();
+                        header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Comm").Bold();
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Questions").Bold();
                         header.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Active").Bold();
                     });
@@ -98,12 +106,14 @@ internal sealed class ReportExportService : IReportExportService
                         DataCell(table, row.InterviewStatus);
                         DataCell(table, row.LatestInterviewScore.ToString("0.0", CultureInfo.InvariantCulture));
                         DataCell(table, row.RoleFitScore.ToString("0.0", CultureInfo.InvariantCulture));
+                        DataCell(table, row.TechnicalScore.ToString("0.0", CultureInfo.InvariantCulture));
+                        DataCell(table, row.CommunicationScore.ToString("0.0", CultureInfo.InvariantCulture));
                         DataCell(table, row.QuestionsAnswered.ToString(CultureInfo.InvariantCulture));
                         DataCell(table, row.IsActive ? "Yes" : "No");
                     }
                 });
 
-                page.Footer().AlignRight().Text("Confidential - MockUpAi").FontColor(Colors.Grey.Darken1);
+                page.Footer().AlignRight().Text("Confidential - InterviewFlo").FontColor(Colors.Grey.Darken1);
             });
         }).GeneratePdf(filePath);
     }

@@ -22,6 +22,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private readonly ICameraPreviewService _camera;
     private readonly IInterviewVoiceService _voice;
     private CancellationTokenSource? _liveCaptionCts;
+    private DateTime? _recordingStartedAtUtc;
 
     [ObservableProperty]
     private string _jobRole = string.Empty;
@@ -40,7 +41,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private string _feedback = string.Empty;
 
     [ObservableProperty]
-    private string _statusMessage = string.Empty;
+    private string _statusMessage = "Preparing interview...";
 
     [ObservableProperty]
     private int _questionNumber;
@@ -67,7 +68,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private string _recordingStatus = "Not recording";
 
     [ObservableProperty]
-    private string _cameraStatus = "Camera initializing...";
+    private string _cameraStatus = "Camera will start after interview setup...";
 
     [ObservableProperty]
     private Bitmap? _cameraFrame;
@@ -107,6 +108,11 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             return;
         }
 
+        StatusMessage = "Preparing interview questions and voice...";
+        Feedback = "Please wait while your interview is prepared.";
+        RecordingStatus = "Setup in progress";
+        QuestionPrompt = "Preparing your first question...";
+
         _camera.FrameReady -= OnCameraFrameReady;
         _camera.FrameReady += OnCameraFrameReady;
 
@@ -116,7 +122,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         JobRole = candidate.JobRole;
         InterviewCategory = candidate.InterviewCategory.ToString();
         _voice.SetVoiceProfile(candidate.InterviewerVoiceProfile);
-        TotalQuestions = start.Questions.Count;
+        TotalQuestions = _workflowService.GetTotalQuestionCount();
         QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
         RunningScore = 0;
         Feedback = "Answer clearly and role-specifically for best scoring.";
@@ -130,9 +136,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         {
             AddInterviewerMessage(start.IntroductionMessage);
             StatusMessage = "AI interviewer is introducing the session...";
-            await PauseForNaturalRhythmAsync(start.IntroductionMessage, 300, 900);
-            await _voice.SpeakAsync(start.IntroductionMessage);
-            await PauseForNaturalRhythmAsync(start.IntroductionMessage, 250, 600);
+            _ = _voice.SpeakAsync(start.IntroductionMessage);
         }
 
         UpdateCurrentQuestion(_workflowService.GetCurrentQuestion());
@@ -152,6 +156,8 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         {
             var answerText = TranscriptInput.Trim();
             AddUserMessage(answerText);
+            StatusMessage = "Analyzing your answer...";
+            Feedback = "Scoring answer quality, role fit, clarity, and keyword coverage.";
 
             var submission = await _workflowService.SubmitAnswerAsync(answerText);
             Feedback = submission.Result.Feedback;
@@ -161,9 +167,9 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             if (!string.IsNullOrWhiteSpace(submission.EncouragementMessage))
             {
                 AddInterviewerMessage(submission.EncouragementMessage);
-                StatusMessage = "AI interviewer is responding...";
+                StatusMessage = $"Analysis complete. Current score: {submission.RunningScore:0.##}/100.";
                 await PauseForNaturalRhythmAsync(submission.EncouragementMessage, 250, 800);
-                await _voice.SpeakAsync(submission.EncouragementMessage);
+                _ = _voice.SpeakAsync(submission.EncouragementMessage);
             }
 
             if (submission.IsInterviewCompleted)
@@ -175,7 +181,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             await PauseForNaturalRhythmAsync(submission.NextQuestion?.Prompt ?? string.Empty, 500, 1200);
             QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
             UpdateCurrentQuestion(submission.NextQuestion);
-            StatusMessage = "Answer recorded. Next question loaded.";
+            StatusMessage = "Answer analyzed. Continue with the interviewer prompt.";
         }
         catch (Exception ex)
         {
@@ -205,6 +211,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             }
 
             IsRecording = true;
+            _recordingStartedAtUtc = DateTime.UtcNow;
             RecordingStatus = "Recording in progress...";
             StatusMessage = "Speak your answer clearly.";
             StartLiveCaptionLoop();
@@ -226,6 +233,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             StopLiveCaptionLoop();
             var wav = await _microphone.StopRecordingAsync();
             IsRecording = false;
+            _recordingStartedAtUtc = null;
 
             if (wav.Length == 0)
             {
@@ -267,6 +275,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
                 return;
             }
 
+            StatusMessage = "Finishing interview and calculating final result...";
             await CompleteInterviewAsync();
         }
         catch (Exception ex)
@@ -307,9 +316,11 @@ public partial class CandidateInterviewViewModel : ViewModelBase
                 StopLiveCaptionLoop();
                 await _microphone.StopRecordingAsync();
                 IsRecording = false;
+                _recordingStartedAtUtc = null;
             }
 
-            var session = await _workflowService.FinishInterviewAsync();
+            using var finishCts = new CancellationTokenSource(TimeSpan.FromSeconds(35));
+            var session = await _workflowService.FinishInterviewAsync(finishCts.Token);
             _sessionContext.LastInterview = session;
 
             StatusMessage = "Interview completed. Preparing feedback page...";
@@ -417,11 +428,24 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         _ = Task.Run(async () =>
         {
             string lastPublished = string.Empty;
+            var silencePromptShown = false;
             while (!token.IsCancellationRequested && IsRecording)
             {
                 try
                 {
                     await Task.Delay(2200, token);
+                    if (!silencePromptShown &&
+                        _recordingStartedAtUtc.HasValue &&
+                        DateTime.UtcNow - _recordingStartedAtUtc.Value > TimeSpan.FromSeconds(8) &&
+                        string.IsNullOrWhiteSpace(LiveTranscriptLog))
+                    {
+                        silencePromptShown = true;
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            RecordingStatus = "Listening... start whenever you are ready, or type your answer manually.";
+                        });
+                    }
+
                     var snapshot = await _microphone.GetLiveWavSnapshotAsync(token);
                     if (snapshot.Length < 12000)
                     {
@@ -469,6 +493,7 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         _liveCaptionCts.Cancel();
         _liveCaptionCts.Dispose();
         _liveCaptionCts = null;
+        _recordingStartedAtUtc = null;
     }
 
     private void AppendToTranscriptLog(string line)

@@ -15,9 +15,11 @@ using MockUpAi.App.ViewModels.Candidate;
 using MockUpAi.App.Views;
 using MockUpAi.Infrastructure;
 using MockUpAi.Infrastructure.Services;
+using System.Runtime.Versioning;
 
 namespace MockUpAi.App;
 
+[SupportedOSPlatform("windows")]
 public partial class App : Application
 {
     public IServiceProvider? Services { get; private set; }
@@ -83,11 +85,11 @@ public partial class App : Application
 
             var navigator = Services.GetRequiredService<IAppNavigator>();
             await navigator.NavigateToLoginAsync();
-            telemetry.Info("MockUpAi app initialized successfully.");
+            telemetry.Info("InterviewFlo app initialized successfully.");
         }
         catch (Exception ex)
         {
-            mainWindow.Title = "MockUpAi - Startup Error";
+            mainWindow.Title = "InterviewFlo - Startup Error";
             mainWindow.Content = new TextBlock
             {
                 Text = $"Startup failed: {ex.Message}",
@@ -101,6 +103,8 @@ public partial class App : Application
         var configuration = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Local.json", optional: true)
+            .AddEnvironmentVariables()
             .Build();
 
         var services = new ServiceCollection();

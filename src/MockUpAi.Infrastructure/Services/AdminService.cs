@@ -60,7 +60,7 @@ internal sealed class AdminService : IAdminService
             InterviewDifficulty = request.Difficulty,
             PassingScore = Math.Clamp(request.PassingScore, 1, 100),
             AiProvider = request.AiProvider,
-            InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "Windows:David" : request.InterviewerVoiceProfile.Trim(),
+            InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "OpenAI:Nova" : request.InterviewerVoiceProfile.Trim(),
             IsActive = true,
             ExpiresAtUtc = request.ExpiresAtUtc,
             MustChangePassword = request.MustChangePasswordOnFirstLogin,
@@ -93,7 +93,7 @@ internal sealed class AdminService : IAdminService
         candidate.InterviewDifficulty = request.Difficulty;
         candidate.PassingScore = Math.Clamp(request.PassingScore, 1, 100);
         candidate.AiProvider = request.AiProvider;
-        candidate.InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "Windows:David" : request.InterviewerVoiceProfile.Trim();
+        candidate.InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "OpenAI:Nova" : request.InterviewerVoiceProfile.Trim();
         candidate.ExpiresAtUtc = request.ExpiresAtUtc;
         candidate.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -222,6 +222,7 @@ internal sealed class AdminService : IAdminService
             {
                 CandidateId = candidate.UserId,
                 JobRole = candidate.JobRole,
+                JobDescription = candidate.JobDescription,
                 Category = candidate.InterviewCategory,
                 Difficulty = candidate.InterviewDifficulty,
                 PassingScore = candidate.PassingScore,
@@ -231,6 +232,10 @@ internal sealed class AdminService : IAdminService
                 LatestInterviewScore = latest?.OverallScore ?? 0,
                 IsPassed = latest?.IsPassed ?? false,
                 RoleFitScore = latest?.RoleFitScore ?? 0,
+                TechnicalScore = AverageScore(latest?.QuestionResults, x => x.TechnicalScore),
+                CommunicationScore = AverageScore(latest?.QuestionResults, x => x.CommunicationScore),
+                DepthScore = AverageScore(latest?.QuestionResults, x => x.DepthScore),
+                RelevanceScore = AverageScore(latest?.QuestionResults, x => x.RelevanceScore),
                 QuestionsAnswered = latest?.QuestionResults.Count ?? 0,
                 CompletedAtUtc = latest?.CompletedAtUtc,
                 IsActive = candidate.IsActive,
@@ -281,5 +286,16 @@ internal sealed class AdminService : IAdminService
         return query.SortDescending
             ? rows.OrderByDescending(selector).ThenBy(x => x.CandidateId)
             : rows.OrderBy(selector).ThenBy(x => x.CandidateId);
+    }
+
+    private static double AverageScore(IReadOnlyCollection<InterviewQuestionResult>? results, Func<InterviewQuestionResult, double> selector)
+    {
+        if (results is null || results.Count == 0)
+        {
+            return 0;
+        }
+
+        var scores = results.Select(selector).Where(x => x > 0).ToList();
+        return scores.Count == 0 ? 0 : Math.Round(scores.Average(), 2);
     }
 }

@@ -5,7 +5,7 @@ namespace MockUpAi.App.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public string AppTitle => "MockUpAi";
+    public string AppTitle => "InterviewFlo";
 
     public string AppSubtitle => "AI-Powered Mock Interview Platform";
 

@@ -93,7 +93,7 @@ dotnet run --project src\MockUpAi.App\MockUpAi.App.csproj
 ## Default Admin
 
 - User ID: `admin`
-- Password: `Admin@123`
+- Password: configure `SeedAdmin:Password` locally or set `MOCKUPAI_SEED_ADMIN_PASSWORD`
 
 ## Notes
 

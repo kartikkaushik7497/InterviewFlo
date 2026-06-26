@@ -11,6 +11,7 @@ public partial class LoginViewModel : ViewModelBase
     private readonly IAuthService _authService;
     private readonly SessionContext _sessionContext;
     private readonly IAppNavigator _navigator;
+    private readonly IStorageStatusService _storageStatus;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
@@ -39,11 +40,13 @@ public partial class LoginViewModel : ViewModelBase
     public LoginViewModel(
         IAuthService authService,
         SessionContext sessionContext,
-        IAppNavigator navigator)
+        IAppNavigator navigator,
+        IStorageStatusService storageStatus)
     {
         _authService = authService;
         _sessionContext = sessionContext;
         _navigator = navigator;
+        _storageStatus = storageStatus;
     }
 
     private bool CanLogin()
@@ -73,7 +76,10 @@ public partial class LoginViewModel : ViewModelBase
             var result = await _authService.LoginAsync(UserId, Password);
             if (!result.IsSuccess || result.User is null)
             {
-                StatusMessage = result.Message;
+                StatusMessage = !_storageStatus.IsPersistent &&
+                                result.Message.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                    ? $"{result.Message} {_storageStatus.Message}"
+                    : result.Message;
                 return;
             }
 

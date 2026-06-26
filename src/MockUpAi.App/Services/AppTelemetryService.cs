@@ -12,7 +12,7 @@ public sealed class AppTelemetryService : IAppTelemetryService
     {
         _logger = logger;
 
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MockUpAi", "logs");
+        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "InterviewFlo", "logs");
         Directory.CreateDirectory(folder);
         _logFilePath = Path.Combine(folder, $"mockupai_{DateTime.UtcNow:yyyyMMdd}.log");
     }

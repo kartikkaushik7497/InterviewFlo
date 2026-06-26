@@ -1,10 +1,17 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace MockUpAi.App.ViewModels.Admin;
 
-public sealed class AdminCandidateRowViewModel
+public sealed partial class AdminCandidateRowViewModel : ObservableObject
 {
+    [ObservableProperty]
+    private bool _isMarkedForDelete;
+
     public string CandidateId { get; init; } = string.Empty;
 
     public string JobRole { get; init; } = string.Empty;
+
+    public string JobDescription { get; init; } = string.Empty;
 
     public string Category { get; init; } = "Technical";
 
@@ -13,7 +20,7 @@ public sealed class AdminCandidateRowViewModel
     public double PassingScore { get; init; } = 60;
 
     public string AiProvider { get; init; } = "OpenAi";
-    public string InterviewerVoiceProfile { get; init; } = "Windows:David";
+    public string InterviewerVoiceProfile { get; init; } = "OpenAI:Nova";
 
     public string InterviewStatus { get; init; } = string.Empty;
 

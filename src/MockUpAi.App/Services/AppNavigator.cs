@@ -70,8 +70,8 @@ public sealed class AppNavigator : IAppNavigator
     public async Task NavigateToCandidateInterviewAsync()
     {
         var viewModel = _serviceProvider.GetRequiredService<CandidateInterviewViewModel>();
-        await viewModel.InitializeAsync();
         _navigationService.Navigate(viewModel);
+        await viewModel.InitializeAsync();
     }
 
     public Task NavigateToCandidateResultAsync()

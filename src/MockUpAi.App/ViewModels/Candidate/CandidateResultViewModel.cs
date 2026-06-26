@@ -33,6 +33,21 @@ public partial class CandidateResultViewModel : ViewModelBase
     [ObservableProperty]
     private double _passingScore = 60;
 
+    [ObservableProperty]
+    private double _technicalScore;
+
+    [ObservableProperty]
+    private double _communicationScore;
+
+    [ObservableProperty]
+    private double _depthScore;
+
+    [ObservableProperty]
+    private double _relevanceScore;
+
+    [ObservableProperty]
+    private string _improvementSummary = string.Empty;
+
     public CandidateResultViewModel(IAppNavigator navigator)
     {
         _navigator = navigator;
@@ -53,6 +68,11 @@ public partial class CandidateResultViewModel : ViewModelBase
             RoleFitScore = 0;
             QuestionsAnswered = 0;
             PassingScore = 60;
+            TechnicalScore = 0;
+            CommunicationScore = 0;
+            DepthScore = 0;
+            RelevanceScore = 0;
+            ImprovementSummary = string.Empty;
             return;
         }
 
@@ -62,6 +82,11 @@ public partial class CandidateResultViewModel : ViewModelBase
         RoleFitScore = session.RoleFitScore;
         QuestionsAnswered = session.QuestionResults.Count;
         PassingScore = session.PassingScore;
+        TechnicalScore = Average(session.QuestionResults.Select(x => x.TechnicalScore));
+        CommunicationScore = Average(session.QuestionResults.Select(x => x.CommunicationScore));
+        DepthScore = Average(session.QuestionResults.Select(x => x.DepthScore));
+        RelevanceScore = Average(session.QuestionResults.Select(x => x.RelevanceScore));
+        ImprovementSummary = BuildImprovementSummary(session);
         CompletedAt = session.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-";
         Verdict = BuildVerdict(session);
     }
@@ -90,5 +115,25 @@ public partial class CandidateResultViewModel : ViewModelBase
         }
 
         return "Below benchmark. Recommend reskilling and retry.";
+    }
+
+    private static double Average(IEnumerable<double> values)
+    {
+        var meaningful = values.Where(x => x > 0).ToList();
+        return meaningful.Count == 0 ? 0 : Math.Round(meaningful.Average(), 2);
+    }
+
+    private static string BuildImprovementSummary(InterviewSession session)
+    {
+        var gaps = session.QuestionResults
+            .SelectMany(x => x.Gaps.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(4)
+            .ToList();
+
+        return gaps.Count == 0
+            ? "Keep practicing with concrete examples, tradeoffs, and measurable outcomes."
+            : $"Focus areas: {string.Join(", ", gaps)}.";
     }
 }

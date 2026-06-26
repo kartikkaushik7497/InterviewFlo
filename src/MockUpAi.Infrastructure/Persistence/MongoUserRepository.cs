@@ -3,7 +3,9 @@ using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Domain.Entities;
 using MockUpAi.Core.Domain.Enums;
 using MockUpAi.Infrastructure.Configuration;
+using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 
 namespace MockUpAi.Infrastructure.Persistence;
 
@@ -46,8 +48,9 @@ internal sealed class MongoUserRepository : IUserRepository
     public async Task<AppUser?> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         var normalized = NormalizeUserId(userId);
+        var filter = UserIdEqualsFilter(normalized);
         return await MongoRepositoryExecutor.ExecuteWithRetryAsync(
-            () => _users.Find(x => x.UserId == normalized).FirstOrDefaultAsync(cancellationToken),
+            () => _users.Find(filter).FirstOrDefaultAsync(cancellationToken),
             _logger,
             "GetByUserId",
             cancellationToken);
@@ -56,8 +59,9 @@ internal sealed class MongoUserRepository : IUserRepository
     public async Task<bool> CandidateExistsAsync(string candidateId, CancellationToken cancellationToken = default)
     {
         var normalized = NormalizeUserId(candidateId);
+        var filter = UserIdEqualsFilter(normalized);
         var count = await MongoRepositoryExecutor.ExecuteWithRetryAsync(
-            () => _users.CountDocumentsAsync(x => x.UserId == normalized, cancellationToken: cancellationToken),
+            () => _users.CountDocumentsAsync(filter, cancellationToken: cancellationToken),
             _logger,
             "CandidateExists",
             cancellationToken);
@@ -114,5 +118,12 @@ internal sealed class MongoUserRepository : IUserRepository
     private static string NormalizeUserId(string userId)
     {
         return userId.Trim().ToLowerInvariant();
+    }
+
+    private static FilterDefinition<AppUser> UserIdEqualsFilter(string normalizedUserId)
+    {
+        return Builders<AppUser>.Filter.Regex(
+            nameof(AppUser.UserId),
+            new BsonRegularExpression($"^{Regex.Escape(normalizedUserId)}$", "i"));
     }
 }

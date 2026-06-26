@@ -8,6 +8,7 @@ namespace MockUpAi.Infrastructure.Services;
 internal sealed class InterviewWorkflowService : IInterviewWorkflowService
 {
     private readonly IInterviewAiService _interviewAiService;
+    private readonly IInterviewTurnOrchestrator _turnOrchestrator;
     private readonly IInterviewRepository _interviewRepository;
 
     private InterviewSession? _session;
@@ -17,9 +18,11 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
 
     public InterviewWorkflowService(
         IInterviewAiService interviewAiService,
+        IInterviewTurnOrchestrator turnOrchestrator,
         IInterviewRepository interviewRepository)
     {
         _interviewAiService = interviewAiService;
+        _turnOrchestrator = turnOrchestrator;
         _interviewRepository = interviewRepository;
     }
 
@@ -33,7 +36,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             candidate.InterviewCategory,
             candidate.JobDescription,
             candidate.InterviewDifficulty,
-            count: plannedCount,
+            count: 1,
             cancellationToken);
 
         _session = new InterviewSession
@@ -99,41 +102,31 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
         var isSkip = IsSkipOrUnknownResponse(answerText);
 
         var question = _questions[_currentIndex];
-        InterviewAnswerEvaluation evaluation;
-        double keywordScore;
         double blendedScore;
         bool isCorrect;
         string encouragement;
+        InterviewTurnDecision? turnDecision = null;
 
         if (isSkip)
         {
-            evaluation = new InterviewAnswerEvaluation(false, 0, "Candidate skipped or could not answer this question.");
-            keywordScore = 0;
             blendedScore = 0;
             isCorrect = false;
             encouragement = "No problem. I will mark this one as skipped and move to the next question.";
         }
         else
         {
-            evaluation = await _interviewAiService.EvaluateAnswerAsync(
+            turnDecision = await _turnOrchestrator.DecideNextTurnAsync(
                 _session.AiProvider,
-                _session.JobRole,
-                _session.Difficulty,
+                _session,
                 question,
                 answerText,
+                _currentIndex,
+                _session.PlannedQuestionCount,
                 cancellationToken);
 
-            keywordScore = CalculateKeywordScore(question.IdealAnswerHint, answerText);
-            blendedScore = Math.Round((evaluation.Score * 0.75) + (keywordScore * 0.25), 2);
+            blendedScore = Math.Round(turnDecision.OverallScore, 2);
             isCorrect = blendedScore >= _session.PassingScore;
-
-            encouragement = await _interviewAiService.GenerateEncouragementAsync(
-                _session.AiProvider,
-                _session.JobRole,
-                _session.Category,
-                _session.Difficulty,
-                answerText,
-                cancellationToken);
+            encouragement = turnDecision.Acknowledgement;
         }
         _session.FlowState = InterviewFlowState.Encourage;
         AddTurn("AI Interviewer", "encouragement", encouragement);
@@ -146,9 +139,17 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             CandidateTranscript = answerText,
             IsCorrect = isCorrect,
             ScoreAwarded = Math.Clamp(blendedScore, 0, 100),
+            TechnicalScore = turnDecision?.TechnicalScore ?? 0,
+            CommunicationScore = turnDecision?.CommunicationScore ?? 0,
+            DepthScore = turnDecision?.DepthScore ?? 0,
+            RelevanceScore = turnDecision?.RelevanceScore ?? 0,
+            ProblemSolvingScore = turnDecision?.ProblemSolvingScore ?? 0,
+            Topic = turnDecision?.Topic ?? string.Empty,
+            Strengths = turnDecision is null ? string.Empty : string.Join("; ", turnDecision.ObservedStrengths),
+            Gaps = turnDecision is null ? string.Empty : string.Join("; ", turnDecision.ObservedGaps),
             Feedback = isSkip
                 ? "Marked as skipped. Score: 0/100."
-                : $"{encouragement} {evaluation.Feedback} Keyword match: {keywordScore:0.##}/100.",
+                : $"{encouragement} {turnDecision?.EvaluationSummary}".Trim(),
         };
 
         _session.QuestionResults.Add(result);
@@ -160,20 +161,20 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
         if (_currentIndex < _session.PlannedQuestionCount)
         {
             _session.FlowState = InterviewFlowState.FollowUp;
-            if (!isSkip)
+            if (!isSkip && turnDecision is not null)
             {
-                nextQuestion = await _interviewAiService.GenerateFollowUpQuestionAsync(
-                    _session.AiProvider,
-                    _session.JobRole,
-                    _session.Category,
-                    _session.Difficulty,
-                    question,
-                    answerText,
-                    _session.ConversationTurns,
-                    cancellationToken);
+                var prompt = turnDecision.ShouldAskClarification && !string.IsNullOrWhiteSpace(turnDecision.ClarificationPrompt)
+                    ? turnDecision.ClarificationPrompt
+                    : turnDecision.NextQuestion;
+
+                nextQuestion = new InterviewQuestion
+                {
+                    Prompt = prompt ?? turnDecision.NextQuestion,
+                    IdealAnswerHint = turnDecision.IdealAnswerHint,
+                };
             }
 
-            if (string.IsNullOrWhiteSpace(nextQuestion.Prompt))
+            if (nextQuestion is null || string.IsNullOrWhiteSpace(nextQuestion.Prompt))
             {
                 nextQuestion = _seedQuestions.ElementAtOrDefault(_currentIndex) ?? new InterviewQuestion
                 {
@@ -212,13 +213,20 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             2);
         _session.IsPassed = _session.OverallScore >= _session.PassingScore;
 
-        _session.RoleFitScore = await _interviewAiService.CalculateRoleFitScoreAsync(
-            _session.AiProvider,
-            _session.JobRole,
-            _session.JobDescription,
-            _session.Difficulty,
-            _session.QuestionResults,
-            cancellationToken);
+        try
+        {
+            _session.RoleFitScore = await _interviewAiService.CalculateRoleFitScoreAsync(
+                _session.AiProvider,
+                _session.JobRole,
+                _session.JobDescription,
+                _session.Difficulty,
+                _session.QuestionResults,
+                cancellationToken);
+        }
+        catch
+        {
+            _session.RoleFitScore = _session.OverallScore;
+        }
 
         await _interviewRepository.SaveAsync(_session, cancellationToken);
         return _session;

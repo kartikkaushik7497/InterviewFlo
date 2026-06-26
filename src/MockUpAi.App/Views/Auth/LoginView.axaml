@@ -82,7 +82,7 @@
                     <TextBlock Text="M" Foreground="#111111" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <StackPanel Spacing="2" VerticalAlignment="Center">
-                    <TextBlock Text="MockUpAi" Foreground="#F3F4F6" FontWeight="SemiBold" FontSize="20" />
+                    <TextBlock Text="InterviewFlo" Foreground="#F3F4F6" FontWeight="SemiBold" FontSize="20" />
                     <TextBlock Text="AI-powered mock interview platform" Foreground="#84CC16" FontSize="11" />
                 </StackPanel>
             </StackPanel>
@@ -110,7 +110,7 @@
                                FontSize="13" />
                 </Border>
 
-                <TextBlock Text="Welcome Back"
+                <TextBlock Text="Welcome"
                            HorizontalAlignment="Center"
                            Foreground="#F9FAFB"
                            FontSize="78"

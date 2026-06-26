@@ -44,17 +44,29 @@ public static class DependencyInjection
                 services.AddSingleton(mongoSettings);
                 services.AddSingleton<IUserRepository, MongoUserRepository>();
                 services.AddSingleton<IInterviewRepository, MongoInterviewRepository>();
+                services.AddSingleton<IStorageStatusService>(_ => new StorageStatusService(
+                    "MongoDB",
+                    isPersistent: true,
+                    "Connected to MongoDB. Candidate and interview data will persist."));
             }
             catch
             {
                 services.AddSingleton<IUserRepository, InMemoryUserRepository>();
                 services.AddSingleton<IInterviewRepository, InMemoryInterviewRepository>();
+                services.AddSingleton<IStorageStatusService>(_ => new StorageStatusService(
+                    "Temporary",
+                    isPersistent: false,
+                    "MongoDB is unreachable. Running with temporary in-memory storage; data will be lost when the app closes."));
             }
         }
         else
         {
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddSingleton<IInterviewRepository, InMemoryInterviewRepository>();
+            services.AddSingleton<IStorageStatusService>(_ => new StorageStatusService(
+                "Temporary",
+                isPersistent: false,
+                "No MongoDB connection string configured. Running with temporary in-memory storage."));
         }
 
         services.AddSingleton<IPasswordPolicyService, PasswordPolicyService>();
@@ -72,6 +84,10 @@ public static class DependencyInjection
         services.AddSingleton<OpenAiInterviewAiService>();
         services.AddSingleton<GeminiInterviewAiService>();
         services.AddSingleton<IInterviewAiService, InterviewAiRouterService>();
+        services.AddSingleton<HeuristicInterviewTurnOrchestrator>();
+        services.AddSingleton<OpenAiInterviewTurnOrchestrator>();
+        services.AddSingleton<GeminiInterviewTurnOrchestrator>();
+        services.AddSingleton<IInterviewTurnOrchestrator, InterviewTurnOrchestratorRouter>();
 
         if (azureSpeechEnabled)
         {

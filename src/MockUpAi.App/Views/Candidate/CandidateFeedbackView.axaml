@@ -31,7 +31,7 @@
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
             <Button Content="Submit Feedback" Classes="Primary" Command="{Binding SubmitFeedbackCommand}" />
-            <Button Content="Continue" Command="{Binding ContinueCommand}" />
+            <Button Content="View Result" Command="{Binding ContinueCommand}" />
             <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
         </StackPanel>
     </Grid>

@@ -6,7 +6,7 @@
         <StackPanel Spacing="12">
             <TextBlock Text="Interview Result" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
 
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
                 <TextBlock Text="Candidate ID:" Classes="Muted" />
                 <TextBlock Grid.Column="1" Text="{Binding CandidateId}" Foreground="#F3F4F6" />
 
@@ -27,10 +27,25 @@
 
                 <TextBlock Grid.Row="6" Text="Passing Marks:" Classes="Muted" />
                 <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding PassingScore}" Foreground="#F3F4F6" />
+
+                <TextBlock Grid.Row="7" Text="Technical:" Classes="Muted" />
+                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding TechnicalScore}" Foreground="#F3F4F6" />
+
+                <TextBlock Grid.Row="8" Text="Communication:" Classes="Muted" />
+                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding CommunicationScore}" Foreground="#F3F4F6" />
+
+                <TextBlock Grid.Row="9" Text="Depth:" Classes="Muted" />
+                <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding DepthScore}" Foreground="#F3F4F6" />
+
+                <TextBlock Grid.Row="10" Text="Relevance:" Classes="Muted" />
+                <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding RelevanceScore}" Foreground="#F3F4F6" />
             </Grid>
 
             <Border Classes="ThemeInset" Padding="12">
-                <TextBlock Text="{Binding Verdict}" TextWrapping="Wrap" Foreground="#E2E8F0" FontSize="14" />
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding Verdict}" TextWrapping="Wrap" Foreground="#E2E8F0" FontSize="14" />
+                    <TextBlock Text="{Binding ImprovementSummary}" TextWrapping="Wrap" Foreground="#CBD5E1" FontSize="13" />
+                </StackPanel>
             </Border>
 
             <Button Content="Done" Classes="Primary" Command="{Binding DoneCommand}" Height="42" />
