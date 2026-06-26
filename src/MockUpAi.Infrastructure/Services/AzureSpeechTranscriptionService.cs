@@ -13,6 +13,8 @@ internal sealed class AzureSpeechTranscriptionService : ITranscriptionService
     private readonly AzureSpeechSettings _settings;
     private readonly ILogger<AzureSpeechTranscriptionService> _logger;
 
+    public string LastError { get; private set; } = string.Empty;
+
     public AzureSpeechTranscriptionService(
         IHttpClientFactory httpClientFactory,
         IOptions<AzureSpeechSettings> settings,
@@ -27,11 +29,13 @@ internal sealed class AzureSpeechTranscriptionService : ITranscriptionService
     {
         if (wavBytes.Length == 0)
         {
+            LastError = "No audio was captured.";
             return string.Empty;
         }
 
         try
         {
+            LastError = string.Empty;
             var key = ResolveApiKey();
             var region = _settings.Region.Trim();
             if (string.IsNullOrWhiteSpace(region))
@@ -50,11 +54,20 @@ internal sealed class AzureSpeechTranscriptionService : ITranscriptionService
             request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
 
             using var response = await client.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                LastError = string.IsNullOrWhiteSpace(errorBody)
+                    ? $"Azure Speech transcription request failed: {(int)response.StatusCode} {response.StatusCode}."
+                    : $"Azure Speech transcription request failed: {(int)response.StatusCode} {response.StatusCode}. {errorBody}";
+                _logger.LogWarning("Azure Speech transcription failed with {StatusCode}: {Body}", response.StatusCode, errorBody);
+                return string.Empty;
+            }
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(json))
             {
+                LastError = "Azure Speech returned an empty transcription response.";
                 return string.Empty;
             }
 
@@ -68,6 +81,7 @@ internal sealed class AzureSpeechTranscriptionService : ITranscriptionService
         }
         catch (Exception ex)
         {
+            LastError = ex.Message;
             _logger.LogWarning(ex, "Azure Speech transcription failed.");
             return string.Empty;
         }

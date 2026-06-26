@@ -15,6 +15,8 @@ internal sealed class OpenAiTranscriptionService : ITranscriptionService
     private readonly ISecretVaultService _secretVault;
     private readonly ILogger<OpenAiTranscriptionService> _logger;
 
+    public string LastError { get; private set; } = string.Empty;
+
     public OpenAiTranscriptionService(
         IHttpClientFactory httpClientFactory,
         IOptions<OpenAiSettings> settings,
@@ -31,11 +33,13 @@ internal sealed class OpenAiTranscriptionService : ITranscriptionService
     {
         if (wavBytes.Length == 0)
         {
+            LastError = "No audio was captured.";
             return string.Empty;
         }
 
         try
         {
+            LastError = string.Empty;
             var key = await ResolveApiKeyAsync(cancellationToken);
             var client = _httpClientFactory.CreateClient(nameof(OpenAiTranscriptionService));
             client.BaseAddress = new Uri(_settings.BaseUrl.TrimEnd('/') + "/");
@@ -50,11 +54,18 @@ internal sealed class OpenAiTranscriptionService : ITranscriptionService
             form.Add(audioContent, "file", fileName);
 
             using var response = await client.PostAsync("audio/transcriptions", form, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                LastError = BuildHttpError(response.StatusCode, errorBody);
+                _logger.LogWarning("OpenAI transcription failed with {StatusCode}: {Body}", response.StatusCode, errorBody);
+                return string.Empty;
+            }
 
             var text = await response.Content.ReadAsStringAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(text))
             {
+                LastError = "OpenAI returned an empty transcription.";
                 return string.Empty;
             }
 
@@ -71,9 +82,44 @@ internal sealed class OpenAiTranscriptionService : ITranscriptionService
         }
         catch (Exception ex)
         {
+            LastError = ex.Message;
             _logger.LogWarning(ex, "Transcription failed.");
             return string.Empty;
         }
+    }
+
+    private static string BuildHttpError(System.Net.HttpStatusCode statusCode, string errorBody)
+    {
+        var status = $"{(int)statusCode} {statusCode}";
+        var message = TryReadOpenAiErrorMessage(errorBody);
+
+        return string.IsNullOrWhiteSpace(message)
+            ? $"OpenAI transcription request failed: {status}."
+            : $"OpenAI transcription request failed: {status}. {message}";
+    }
+
+    private static string TryReadOpenAiErrorMessage(string errorBody)
+    {
+        if (string.IsNullOrWhiteSpace(errorBody))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(errorBody);
+            if (doc.RootElement.TryGetProperty("error", out var error) &&
+                error.TryGetProperty("message", out var message))
+            {
+                return message.GetString() ?? string.Empty;
+            }
+        }
+        catch (JsonException)
+        {
+            return errorBody.Length > 220 ? errorBody[..220] : errorBody;
+        }
+
+        return string.Empty;
     }
 
     private async Task<string> ResolveApiKeyAsync(CancellationToken cancellationToken)

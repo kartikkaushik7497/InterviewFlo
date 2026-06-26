@@ -235,17 +235,22 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             IsRecording = false;
             _recordingStartedAtUtc = null;
 
-            if (wav.Length == 0)
+            if (wav.Length <= 44)
             {
-                RecordingStatus = "No audio captured.";
+                RecordingStatus = string.IsNullOrWhiteSpace(_microphone.LastError)
+                    ? "No speech audio was captured. Check microphone permission/device and try again."
+                    : _microphone.LastError;
                 return;
             }
 
-            RecordingStatus = "Transcribing audio...";
+            RecordingStatus = $"Audio captured ({wav.Length / 1024.0:0.0} KB). Transcribing...";
             var transcript = await _transcription.TranscribeWavAsync(wav, $"answer_{DateTime.UtcNow:yyyyMMddHHmmss}.wav");
             if (string.IsNullOrWhiteSpace(transcript))
             {
-                RecordingStatus = "Transcription unavailable. You can type the answer manually.";
+                RecordingStatus = string.IsNullOrWhiteSpace(_transcription.LastError)
+                    ? "Audio was recorded, but transcription failed. Check the OpenAI key/network, or type the answer manually."
+                    : $"Audio was recorded, but transcription failed: {_transcription.LastError}";
+                StatusMessage = "Recording worked; speech-to-text did not return text.";
                 return;
             }
 

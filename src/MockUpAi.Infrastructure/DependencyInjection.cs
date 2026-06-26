@@ -74,7 +74,6 @@ public static class DependencyInjection
         services.AddSingleton<IReportExportService, ReportExportService>();
         var openAiSettings = configuration.GetSection("OpenAi").Get<OpenAiSettings>() ?? new OpenAiSettings();
         var azureSpeechSettings = configuration.GetSection("AzureSpeech").Get<AzureSpeechSettings>() ?? new AzureSpeechSettings();
-        var openAiEnabled = openAiSettings.Enabled && !string.IsNullOrWhiteSpace(openAiSettings.ApiKey);
         var azureSpeechEnabled = azureSpeechSettings.Enabled &&
                                  !string.IsNullOrWhiteSpace(azureSpeechSettings.Region) &&
                                  (!string.IsNullOrWhiteSpace(azureSpeechSettings.ApiKey) ||
@@ -93,7 +92,7 @@ public static class DependencyInjection
         {
             services.AddSingleton<ITranscriptionService, AzureSpeechTranscriptionService>();
         }
-        else if (openAiEnabled)
+        else if (openAiSettings.Enabled)
         {
             services.AddSingleton<ITranscriptionService, OpenAiTranscriptionService>();
         }
