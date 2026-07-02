@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InterviewFlo.App.Views.Candidate.CandidateLobbyView"
+             x:CompileBindings="False">
+    <Border Classes="ThemeCard" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760" Margin="8">
+        <StackPanel Spacing="14" HorizontalAlignment="Center">
+            <TextBlock Text="Interview Waiting Lobby" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
+            <TextBlock Text="Your interview auto-starts quickly after the timer." Classes="Muted" HorizontalAlignment="Center" />
+
+            <Border Classes="ThemeInset" Padding="20" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding CountdownDisplay}" FontSize="56" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" />
+            </Border>
+
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" HorizontalAlignment="Center" TextWrapping="Wrap" />
+
+            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                <Button Content="Start Interview Now" Classes="Primary" Command="{Binding StartNowCommand}" />
+                <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

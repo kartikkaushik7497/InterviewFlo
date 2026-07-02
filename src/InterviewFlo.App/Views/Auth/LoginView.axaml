@@ -1,0 +1,238 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InterviewFlo.App.Views.Auth.LoginView"
+             x:CompileBindings="False">
+    <UserControl.Styles>
+        <Style Selector="TextBox.AuthInput">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#E5E7EB" />
+            <Setter Property="CaretBrush" Value="#FB923C" />
+            <Setter Property="SelectionBrush" Value="#66FB923C" />
+            <Setter Property="SelectionForegroundBrush" Value="#FFFFFF" />
+            <Setter Property="PlaceholderForeground" Value="#7E818A" />
+            <Setter Property="FocusAdorner" Value="{x:Null}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.AuthInput:pointerover, TextBox.AuthInput:focus, TextBox.AuthInput:focus-within">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.AuthInput /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+        </Style>
+        <Style Selector="TextBox.AuthInput:pointerover /template/ Border#PART_BorderElement, TextBox.AuthInput:focus /template/ Border#PART_BorderElement, TextBox.AuthInput:focus-within /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          ClipToBounds="True"
+          Background="#050607">
+
+        <Grid Grid.RowSpan="3" IsHitTestVisible="False" Opacity="0.18">
+            <Canvas>
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="64" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="128" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="192" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="256" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="320" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="384" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="448" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="512" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="576" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="640" />
+
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="90" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="180" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="270" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="360" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="450" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="540" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="630" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="720" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="810" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="900" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="990" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1080" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1170" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1260" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1350" />
+            </Canvas>
+        </Grid>
+
+        <Canvas Grid.RowSpan="3" IsHitTestVisible="False">
+            <Border Canvas.Left="210" Canvas.Top="140" Width="96" Height="96" CornerRadius="48" Background="#D8EA580C" BoxShadow="0 0 34 12 #7DEA580C" />
+            <Border Canvas.Left="300" Canvas.Top="450" Width="50" Height="50" CornerRadius="25" Background="#D8E11D48" BoxShadow="0 0 30 10 #8BE11D48" />
+            <Border Canvas.Right="150" Canvas.Top="170" Width="150" Height="250" CornerRadius="80" Background="#2C22C55E" BoxShadow="0 0 110 28 #2922C55E" />
+            <Border Canvas.Right="220" Canvas.Top="430" Width="46" Height="46" CornerRadius="23" Background="#D8BE123C" BoxShadow="0 0 30 10 #86BE123C" />
+        </Canvas>
+
+        <Grid Grid.Row="0" Margin="34,24,34,0" ColumnDefinitions="Auto,*" VerticalAlignment="Top">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <Border Width="44" Height="44" CornerRadius="22" Background="#EA580C" BoxShadow="0 0 20 4 #66EA580C">
+                    <TextBlock Text="M" Foreground="#111111" FontWeight="Bold" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Spacing="2" VerticalAlignment="Center">
+                    <TextBlock Text="InterviewFlo" Foreground="#F3F4F6" FontWeight="SemiBold" FontSize="20" />
+                    <TextBlock Text="AI-powered mock interview platform" Foreground="#84CC16" FontSize="11" />
+                </StackPanel>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Text="Admin and Candidate Sign In"
+                       Foreground="#FB923C"
+                       FontWeight="SemiBold"
+                       FontSize="13" />
+        </Grid>
+
+        <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760">
+            <StackPanel HorizontalAlignment="Center" Spacing="14">
+                <Border HorizontalAlignment="Center"
+                        BorderBrush="#50FFFFFF"
+                        BorderThickness="1"
+                        CornerRadius="22"
+                        Padding="16,6"
+                        Background="#11000000">
+                    <TextBlock Text="Login"
+                               Foreground="#F9FAFB"
+                               FontWeight="SemiBold"
+                               FontSize="13" />
+                </Border>
+
+                <TextBlock Text="Welcome"
+                           HorizontalAlignment="Center"
+                           Foreground="#F9FAFB"
+                           FontSize="78"
+                           FontWeight="Bold" />
+
+                <TextBlock Text="Continue your interview workflow"
+                           HorizontalAlignment="Center"
+                           Foreground="#8B93A3"
+                           FontSize="14" />
+
+                <StackPanel Width="560" Spacing="12" Margin="0,8,0,0">
+                    <Border Height="58"
+                            CornerRadius="29"
+                            Background="#2D2D2D"
+                            BorderBrush="#3B3F46"
+                            BorderThickness="1"
+                            Padding="8,0,12,0">
+                        <Grid ColumnDefinitions="40,*" VerticalAlignment="Center">
+                            <Path Grid.Column="0"
+                                  Width="16"
+                                  Height="16"
+                                  Fill="#9CA3AF"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center"
+                                  Data="M2,6 C2,4.34314575 3.34314575,3 5,3 L19,3 C20.6568542,3 22,4.34314575 22,6 L22,18 C22,19.6568542 20.6568542,21 19,21 L5,21 C3.34314575,21 2,19.6568542 2,18 Z M4,7 L12,12 L20,7 L20,6 L4,6 Z" />
+                            <TextBox Grid.Column="1"
+                                     Classes="AuthInput"
+                                     Text="{Binding UserId, Mode=TwoWay}"
+                                     PlaceholderText="User ID" />
+                        </Grid>
+                    </Border>
+
+                    <Border Height="58"
+                            CornerRadius="29"
+                            Background="#2D2D2D"
+                            BorderBrush="#3B3F46"
+                            BorderThickness="1"
+                            Padding="8,0,8,0">
+                        <Grid ColumnDefinitions="40,*,40" VerticalAlignment="Center">
+                            <Path Grid.Column="0"
+                                  Width="16"
+                                  Height="16"
+                                  Fill="#9CA3AF"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center"
+                                  Data="M7,9 L7,6.8 C7,4.1490332 9.1490332,2 11.8,2 C14.4509668,2 16.6,4.1490332 16.6,6.8 L16.6,9 L17.8,9 C19.014,9 20,9.986 20,11.2 L20,19.8 C20,21.014 19.014,22 17.8,22 L5.8,22 C4.586,22 3.6,21.014 3.6,19.8 L3.6,11.2 C3.6,9.986 4.586,9 5.8,9 Z M8.8,9 L14.8,9 L14.8,6.8 C14.8,5.143 13.457,3.8 11.8,3.8 C10.143,3.8 8.8,5.143 8.8,6.8 Z" />
+                            <TextBox Grid.Column="1"
+                                     Classes="AuthInput"
+                                     Text="{Binding Password, Mode=TwoWay}"
+                                     RevealPassword="{Binding RevealPassword}"
+                                     PasswordChar="*"
+                                     PlaceholderText="Password" />
+                            <Button Grid.Column="2"
+                                    Command="{Binding ToggleRevealPasswordCommand}"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    FocusAdorner="{x:Null}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    ToolTip.Tip="Show or hide password">
+                                <Grid Width="20" Height="20">
+                                    <Path Width="20" Height="20" Fill="#E5E7EB"
+                                          IsVisible="{Binding RevealPassword}"
+                                          Data="M1,12 C2.8,8.6 6.7,6 11,6 C15.3,6 19.2,8.6 21,12 C19.2,15.4 15.3,18 11,18 C6.7,18 2.8,15.4 1,12 Z M11,8.4 C9.01,8.4 7.4,10.01 7.4,12 C7.4,13.99 9.01,15.6 11,15.6 C12.99,15.6 14.6,13.99 14.6,12 C14.6,10.01 12.99,8.4 11,8.4 Z" />
+                                    <Grid IsVisible="{Binding IsPasswordHidden}">
+                                        <Path Width="20" Height="20" Fill="#E5E7EB"
+                                              Data="M1,12 C2.8,8.6 6.7,6 11,6 C15.3,6 19.2,8.6 21,12 C19.2,15.4 15.3,18 11,18 C6.7,18 2.8,15.4 1,12 Z M11,8.4 C9.01,8.4 7.4,10.01 7.4,12 C7.4,13.99 9.01,15.6 11,15.6 C12.99,15.6 14.6,13.99 14.6,12 C14.6,10.01 12.99,8.4 11,8.4 Z" />
+                                        <Path Stroke="#E5E7EB"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              Data="M4,4 L18,18" />
+                                    </Grid>
+                                </Grid>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <Button Width="154"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Center"
+                            Command="{Binding LoginCommand}"
+                            IsDefault="True"
+                            Background="#F97316"
+                            BorderBrush="#FB923C"
+                            BorderThickness="1"
+                            CornerRadius="24"
+                            Padding="8,8,16,8"
+                            FocusAdorner="{x:Null}">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <Border Width="32" Height="32" CornerRadius="16" Background="#FAFAFA22">
+                                <TextBlock Text=">" Foreground="White" FontWeight="Bold" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Login"
+                                       Foreground="#F8FAFC"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Border Margin="0,12,0,0"
+                            Background="#1A1A1A"
+                            BorderBrush="#343434"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10"
+                            Opacity="0.9"
+                            IsVisible="{Binding HasStatusMessage}">
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   Foreground="#D1D5DB"
+                                   TextWrapping="Wrap"
+                                   FontSize="15" />
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="2"
+                   Margin="0,10,0,12"
+                   HorizontalAlignment="Center"
+                   Foreground="#6B7280"
+                   FontSize="12"
+                   Text="" />
+    </Grid>
+</UserControl>

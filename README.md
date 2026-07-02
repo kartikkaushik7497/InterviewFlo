@@ -1,6 +1,6 @@
-﻿# MockUpAi
+# InterviewFlo
 
-MockUpAi is a cross-platform desktop AI interview platform built with:
+InterviewFlo is a cross-platform desktop AI interview platform built with:
 - .NET 10
 - Avalonia UI
 - MongoDB Atlas (with resilient fallback)
@@ -62,13 +62,13 @@ MockUpAi is a cross-platform desktop AI interview platform built with:
 
 ## Project Structure
 
-- `src/MockUpAi.App` -> Avalonia UI, navigation, media capture, telemetry
-- `src/MockUpAi.Core` -> domain models, DTOs, contracts
-- `src/MockUpAi.Infrastructure` -> Mongo persistence, AI services, security, exports
+- `src/InterviewFlo.App` -> Avalonia UI, navigation, media capture, telemetry
+- `src/InterviewFlo.Core` -> domain models, DTOs, contracts
+- `src/InterviewFlo.Infrastructure` -> Mongo persistence, AI services, security, exports
 
 ## Configuration
 
-Edit `src/MockUpAi.App/appsettings.json`:
+Edit `src/InterviewFlo.App/appsettings.json`:
 
 - `MongoDb:ConnectionString`
 - `MongoDb:DatabaseName`
@@ -80,20 +80,20 @@ Edit `src/MockUpAi.App/appsettings.json`:
 
 You can also set:
 - `OPENAI_API_KEY` environment variable
-- `MOCKUPAI_MASTER_SECRET` environment variable (for stronger local vault encryption key derivation)
+- `INTERVIEWFLO_MASTER_SECRET` environment variable (for stronger local vault encryption key derivation)
 
 ## Run
 
 ```powershell
-cd C:\Users\karti\OneDrive\Desktop\mock
+cd C:\Users\91912\Desktop\InterviewFlo
 dotnet restore
-dotnet run --project src\MockUpAi.App\MockUpAi.App.csproj
+dotnet run --project src\InterviewFlo.App\InterviewFlo.App.csproj
 ```
 
 ## Default Admin
 
 - User ID: `admin`
-- Password: configure `SeedAdmin:Password` locally or set `MOCKUPAI_SEED_ADMIN_PASSWORD`
+- Password: configure `SeedAdmin:Password` locally or set `INTERVIEWFLO_SEED_ADMIN_PASSWORD`
 
 ## Notes
 

@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InterviewFlo.App.Views.Candidate.CandidateFeedbackView"
+             x:CompileBindings="False">
+    <Grid RowDefinitions="*,Auto" RowSpacing="12" Margin="8">
+        <Border Classes="ThemeCard" Width="760" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20">
+            <StackPanel Spacing="12">
+                <TextBlock Text="Interview Feedback" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
+                <TextBlock Text="Rate your interview experience and share suggestions." Classes="Muted" HorizontalAlignment="Center" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                    <Button Content="{Binding Star1}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="1" />
+                    <Button Content="{Binding Star2}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="2" />
+                    <Button Content="{Binding Star3}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="3" />
+                    <Button Content="{Binding Star4}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="4" />
+                    <Button Content="{Binding Star5}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="5" />
+                </StackPanel>
+
+                <TextBlock Text="Suggestions / Comments" Classes="Muted" />
+                <TextBox Text="{Binding Suggestions, Mode=TwoWay}"
+                         AcceptsReturn="True"
+                         Height="140"
+                         TextWrapping="Wrap"
+                         PlaceholderText="Share what could be improved or what worked well..." />
+
+                <Border Classes="ThemeInset">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Submit Feedback" Classes="Primary" Command="{Binding SubmitFeedbackCommand}" />
+            <Button Content="View Result" Command="{Binding ContinueCommand}" />
+            <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

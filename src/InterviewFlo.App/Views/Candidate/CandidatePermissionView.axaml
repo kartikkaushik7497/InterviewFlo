@@ -1,0 +1,128 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="InterviewFlo.App.Views.Candidate.CandidatePermissionView"
+             x:CompileBindings="False">
+    <Grid ClipToBounds="True" Background="#050607">
+        <Grid IsHitTestVisible="False" Opacity="0.18">
+            <Canvas>
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="64" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="128" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="192" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="256" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="320" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="384" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="448" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="512" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="576" />
+                <Border Width="2600" Height="1" Background="#1FFFFFFF" Canvas.Top="640" />
+
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="90" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="180" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="270" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="360" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="450" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="540" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="630" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="720" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="810" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="900" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="990" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1080" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1170" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1260" />
+                <Border Width="1" Height="1800" Background="#17FFFFFF" Canvas.Left="1350" />
+            </Canvas>
+        </Grid>
+
+        <Canvas IsHitTestVisible="False">
+            <Border Canvas.Left="210" Canvas.Top="140" Width="96" Height="96" CornerRadius="48" Background="#D8EA580C" BoxShadow="0 0 34 12 #7DEA580C" />
+            <Border Canvas.Left="300" Canvas.Top="450" Width="50" Height="50" CornerRadius="25" Background="#D8E11D48" BoxShadow="0 0 30 10 #8BE11D48" />
+            <Border Canvas.Right="150" Canvas.Top="170" Width="150" Height="250" CornerRadius="80" Background="#2C22C55E" BoxShadow="0 0 110 28 #2922C55E" />
+            <Border Canvas.Right="220" Canvas.Top="430" Width="46" Height="46" CornerRadius="23" Background="#D8BE123C" BoxShadow="0 0 30 10 #86BE123C" />
+        </Canvas>
+
+        <Border Classes="ThemeCard"
+                Width="836"
+                MaxWidth="836"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Margin="18">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Permission Check" Classes="PageTitle" FontSize="28" />
+                <TextBlock Text="Camera and microphone are required before continuing." Classes="Muted" TextWrapping="Wrap" />
+
+                <Border Background="#14222A20" BorderBrush="#2F4557" BorderThickness="1" CornerRadius="12" Padding="14,12">
+                    <Grid ColumnDefinitions="24,*" ColumnSpacing="12">
+                        <Grid Width="22" Height="22" VerticalAlignment="Center">
+                            <Border Width="22" Height="22" CornerRadius="11" Background="#0E2C23" BorderBrush="#22C55E" BorderThickness="1.2" />
+                            <Path IsVisible="{Binding MicrophoneAccessGranted}"
+                                  Width="12"
+                                  Height="9"
+                                  Stretch="Fill"
+                                  Fill="#22C55E"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Data="M0,4 L3.2,7.2 L10,0.8 L8.8,0 L3.2,5.2 L1.1,3.3 Z" />
+                        </Grid>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock Text="Microphone Access"
+                                       Foreground="#EEF2FF"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="Required for interview voice capture"
+                                       Foreground="#93A3B8"
+                                       FontSize="12" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Background="#14222A20" BorderBrush="#2F4557" BorderThickness="1" CornerRadius="12" Padding="14,12">
+                    <Grid ColumnDefinitions="24,*" ColumnSpacing="12">
+                        <Grid Width="22" Height="22" VerticalAlignment="Center">
+                            <Border Width="22" Height="22" CornerRadius="11" Background="#0E2C23" BorderBrush="#22C55E" BorderThickness="1.2" />
+                            <Path IsVisible="{Binding CameraAccessGranted}"
+                                  Width="12"
+                                  Height="9"
+                                  Stretch="Fill"
+                                  Fill="#22C55E"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Data="M0,4 L3.2,7.2 L10,0.8 L8.8,0 L3.2,5.2 L1.1,3.3 Z" />
+                        </Grid>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock Text="Camera Access"
+                                       Foreground="#EEF2FF"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="Required for live video monitoring"
+                                       Foreground="#93A3B8"
+                                       FontSize="12" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10" VerticalAlignment="Center">
+                    <Button Grid.Column="0" Content="Request Access" Command="{Binding RequestAccessCommand}" Height="42" />
+                    <Button Grid.Column="1" Content="Recheck" Command="{Binding RecheckCommand}" Height="42" />
+                    <Button Grid.Column="2" Content="Continue" Classes="Primary" Command="{Binding ContinueCommand}" Height="42" />
+                    <Grid Grid.Column="3" Width="18" Height="18" IsVisible="{Binding IsChecking}" VerticalAlignment="Center">
+                        <Path Stroke="#4ADE80"
+                              StrokeThickness="2"
+                              StrokeLineCap="Round"
+                              Data="M9,1 A8,8 0 1 1 8.99,1">
+                            <Path.RenderTransform>
+                                <RotateTransform Angle="{Binding LoadingAngle}" CenterX="9" CenterY="9" />
+                            </Path.RenderTransform>
+                        </Path>
+                    </Grid>
+                </Grid>
+
+                <Border Classes="ThemeInset">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
