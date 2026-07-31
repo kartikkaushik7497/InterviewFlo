@@ -7,9 +7,12 @@ public static class RoleCatalog
         "Backend Developer",
         "Frontend Developer",
         "Full Stack Developer",
+        "Mobile App Developer",
+        "Software QA Engineer",
+        "DevOps / Cloud Engineer",
         "Data Analyst",
-        "DevOps Engineer",
-        "QA Engineer",
-        "Product Manager",
+        "Machine Learning Engineer",
+        "Cybersecurity Analyst",
+        "Database Administrator",
     ];
 }

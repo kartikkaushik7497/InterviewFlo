@@ -2,14 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.App"
              xmlns:local="using:MockUpAi.App"
-             xmlns:vmCandidate="using:MockUpAi.App.ViewModels.Candidate"
-             xmlns:viewCandidate="using:MockUpAi.App.Views.Candidate"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Light">
 
     <Application.DataTemplates>
-        <DataTemplate DataType="vmCandidate:CandidateFeedbackViewModel">
-            <viewCandidate:CandidateFeedbackView />
-        </DataTemplate>
         <local:ViewLocator/>
     </Application.DataTemplates>
 
@@ -22,6 +17,17 @@
         <SolidColorBrush x:Key="ThemeMuted" Color="#98A2B3" />
         <SolidColorBrush x:Key="ThemeAccent" Color="#FB923C" />
         <SolidColorBrush x:Key="ThemeAccentStrong" Color="#F97316" />
+        <SolidColorBrush x:Key="LightShellBg" Color="#EEF4F8" />
+        <SolidColorBrush x:Key="LightSurface" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="LightSurfaceMuted" Color="#F8FAFC" />
+        <SolidColorBrush x:Key="LightBorder" Color="#CFE0EA" />
+        <SolidColorBrush x:Key="LightBorderStrong" Color="#BED7F5" />
+        <SolidColorBrush x:Key="LightText" Color="#0F172A" />
+        <SolidColorBrush x:Key="LightMutedText" Color="#64748B" />
+        <SolidColorBrush x:Key="LightPrimary" Color="#2563EB" />
+        <SolidColorBrush x:Key="LightPrimaryHover" Color="#1D4ED8" />
+        <SolidColorBrush x:Key="LightSuccess" Color="#0F766E" />
+        <SolidColorBrush x:Key="LightDanger" Color="#991B1B" />
     </Application.Resources>
 
     <Application.Styles>
@@ -44,6 +50,22 @@
             <Setter Property="Foreground" Value="{DynamicResource ThemeMuted}" />
         </Style>
 
+        <Style Selector="TextBlock.LightPageTitle">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource LightText}" />
+        </Style>
+
+        <Style Selector="TextBlock.LightSectionTitle">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#334155" />
+        </Style>
+
+        <Style Selector="TextBlock.LightMuted">
+            <Setter Property="Foreground" Value="{DynamicResource LightMutedText}" />
+        </Style>
+
         <Style Selector="Border.ThemeCard">
             <Setter Property="Background" Value="{DynamicResource ThemeCardBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeCardBorder}" />
@@ -60,6 +82,30 @@
             <Setter Property="Padding" Value="10" />
         </Style>
 
+        <Style Selector="Border.LightCard">
+            <Setter Property="Background" Value="{DynamicResource LightSurface}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LightBorder}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="16" />
+        </Style>
+
+        <Style Selector="Border.LightInset">
+            <Setter Property="Background" Value="{DynamicResource LightSurfaceMuted}" />
+            <Setter Property="BorderBrush" Value="#D6E1EA" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
+        <Style Selector="Border.LightInfo">
+            <Setter Property="Background" Value="#EFF6FF" />
+            <Setter Property="BorderBrush" Value="#BFDBFE" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+        </Style>
+
         <Style Selector="TextBox, ComboBox">
             <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
             <Setter Property="Background" Value="#2A2F38" />
@@ -70,6 +116,24 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
 
+        <Style Selector="TextBox">
+            <Setter Property="PlaceholderForeground" Value="#B6C2D3" />
+            <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}" />
+            <Setter Property="SelectionBrush" Value="#66FB923C" />
+            <Setter Property="SelectionForegroundBrush" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="ComboBox /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+        </Style>
+
+        <Style Selector="TextBox /template/ Border#PART_BorderElement, ComboBox /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#2A2F38" />
+            <Setter Property="BorderBrush" Value="#3D4657" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+        </Style>
+
         <Style Selector="TextBox:pointerover, ComboBox:pointerover">
             <Setter Property="BorderBrush" Value="#54627A" />
         </Style>
@@ -78,29 +142,246 @@
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccent}" />
         </Style>
 
+        <Style Selector="TextBox:focus, TextBox:focus-within">
+            <Setter Property="PlaceholderForeground" Value="#334155" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput, ComboBox.LightInput">
+            <Setter Property="Foreground" Value="{DynamicResource LightText}" />
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput">
+            <Setter Property="PlaceholderForeground" Value="#475569" />
+            <Setter Property="CaretBrush" Value="{DynamicResource LightPrimary}" />
+            <Setter Property="SelectionBrush" Value="#BFDBFE" />
+            <Setter Property="SelectionForegroundBrush" Value="#0F172A" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput:pointerover, ComboBox.LightInput:pointerover">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#93C5FD" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput:focus, TextBox.LightInput:focus-within, ComboBox.LightInput:focus, ComboBox.LightInput:focus-within">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LightPrimary}" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput /template/ Border#PART_BorderElement, ComboBox.LightInput /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput:pointerover /template/ Border#PART_BorderElement, ComboBox.LightInput:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#93C5FD" />
+        </Style>
+
+        <Style Selector="TextBox.LightInput:focus /template/ Border#PART_BorderElement, TextBox.LightInput:focus-within /template/ Border#PART_BorderElement, ComboBox.LightInput:focus /template/ Border#PART_BorderElement, ComboBox.LightInput:focus-within /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="{DynamicResource LightPrimary}" />
+        </Style>
+
         <Style Selector="CheckBox">
             <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
         </Style>
 
+        <Style Selector="CheckBox /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="CheckBox:pointerover /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="CheckBox:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#7F8EA3" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
         <Style Selector="Button">
             <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
-            <Setter Property="Background" Value="#2A313D" />
-            <Setter Property="BorderBrush" Value="#465167" />
+            <Setter Property="Background" Value="#263142" />
+            <Setter Property="BorderBrush" Value="#526075" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="10" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FocusAdorner" Value="{x:Null}" />
+            <Setter Property="MinHeight" Value="36" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+            <Setter Property="Opacity" Value="1" />
         </Style>
 
         <Style Selector="Button:pointerover">
-            <Setter Property="Background" Value="#343D4C" />
-            <Setter Property="BorderBrush" Value="#5B6882" />
+            <Setter Property="Background" Value="#3B475A" />
+            <Setter Property="BorderBrush" Value="#7C8DA8" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
         </Style>
 
         <Style Selector="Button:pressed">
-            <Setter Property="Background" Value="#252B36" />
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button:disabled">
+            <Setter Property="Background" Value="#1B2230" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Foreground" Value="#78859A" />
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="Cursor" Value="Arrow" />
+        </Style>
+
+        <Style Selector="Button:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource TemplatedParent}}" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.IconButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+
+        <Style Selector="Button.IconButton:pointerover">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="BorderBrush" Value="#526075" />
+        </Style>
+
+        <Style Selector="Button.IconButton:pressed">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#526075" />
+        </Style>
+
+        <Style Selector="Button.LightPrimary">
+            <Setter Property="Background" Value="{DynamicResource LightPrimary}" />
+            <Setter Property="BorderBrush" Value="#1D4ED8" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.LightPrimary:pointerover">
+            <Setter Property="Background" Value="#3B82F6" />
+            <Setter Property="BorderBrush" Value="#60A5FA" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.LightPrimary:pressed">
+            <Setter Property="Background" Value="#1D4ED8" />
+            <Setter Property="BorderBrush" Value="#2563EB" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.LightPrimary:disabled">
+            <Setter Property="Background" Value="#EAF3FF" />
+            <Setter Property="BorderBrush" Value="#BFDBFE" />
+            <Setter Property="Foreground" Value="#1E3A8A" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.LightPrimary:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#1E3A8A" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.LightNeutral">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="Foreground" Value="#1E293B" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.LightNeutral:pointerover">
+            <Setter Property="Background" Value="#E2E8F0" />
+            <Setter Property="BorderBrush" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="#0F172A" />
+        </Style>
+
+        <Style Selector="Button.LightNeutral:pressed">
+            <Setter Property="Background" Value="#CBD5E1" />
+            <Setter Property="BorderBrush" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="#0F172A" />
+        </Style>
+
+        <Style Selector="Button.LightNeutral:disabled">
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.LightNeutral:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#64748B" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.LightDanger">
+            <Setter Property="Background" Value="{DynamicResource LightDanger}" />
+            <Setter Property="BorderBrush" Value="#B91C1C" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.LightDanger:pointerover">
+            <Setter Property="Background" Value="#B91C1C" />
+            <Setter Property="BorderBrush" Value="#DC2626" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.LightDanger:pressed">
+            <Setter Property="Background" Value="#7F1D1D" />
+            <Setter Property="BorderBrush" Value="#991B1B" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.LightDanger:disabled">
+            <Setter Property="Background" Value="#FEE2E2" />
+            <Setter Property="BorderBrush" Value="#FCA5A5" />
+            <Setter Property="Foreground" Value="#7F1D1D" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.LightDanger:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#7F1D1D" />
+            <Setter Property="Opacity" Value="1" />
         </Style>
 
         <Style Selector="Button.Primary">
@@ -110,14 +391,57 @@
         </Style>
 
         <Style Selector="Button.Primary:pointerover">
-            <Setter Property="Background" Value="#FB7D2A" />
+            <Setter Property="Background" Value="#FB923C" />
             <Setter Property="BorderBrush" Value="#FDBA74" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.Primary:pressed">
+            <Setter Property="Background" Value="#EA580C" />
+            <Setter Property="BorderBrush" Value="#FDBA74" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.Primary:disabled">
+            <Setter Property="Background" Value="#7C3E17" />
+            <Setter Property="BorderBrush" Value="#9A541F" />
+            <Setter Property="Foreground" Value="#FED7AA" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.Primary:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#FED7AA" />
+            <Setter Property="Opacity" Value="1" />
         </Style>
 
         <Style Selector="Button.Danger">
             <Setter Property="Background" Value="#7F1D1D" />
             <Setter Property="BorderBrush" Value="#B91C1C" />
             <Setter Property="Foreground" Value="#FEE2E2" />
+        </Style>
+
+        <Style Selector="Button.Danger:pointerover">
+            <Setter Property="Background" Value="#991B1B" />
+            <Setter Property="BorderBrush" Value="#EF4444" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.Danger:pressed">
+            <Setter Property="Background" Value="#641717" />
+            <Setter Property="BorderBrush" Value="#B91C1C" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.Danger:disabled">
+            <Setter Property="Background" Value="#4B1717" />
+            <Setter Property="BorderBrush" Value="#7F1D1D" />
+            <Setter Property="Foreground" Value="#FCA5A5" />
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="Button.Danger:disabled /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="#FCA5A5" />
+            <Setter Property="Opacity" Value="1" />
         </Style>
 
         <Style Selector="DataGrid">

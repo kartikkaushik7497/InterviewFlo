@@ -31,13 +31,15 @@ public static class DependencyInjection
                 var clientSettings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
                 clientSettings.RetryReads = true;
                 clientSettings.RetryWrites = true;
-                clientSettings.ServerSelectionTimeout = TimeSpan.FromSeconds(2);
-                clientSettings.ConnectTimeout = TimeSpan.FromSeconds(2);
+                clientSettings.ServerSelectionTimeout = TimeSpan.FromSeconds(8);
+                clientSettings.ConnectTimeout = TimeSpan.FromSeconds(5);
+                clientSettings.SocketTimeout = TimeSpan.FromSeconds(20);
+                clientSettings.MaxConnectionIdleTime = TimeSpan.FromMinutes(10);
 
                 var client = new MongoClient(clientSettings);
                 var database = client.GetDatabase(mongoSettings.DatabaseName);
 
-                using var pingCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                using var pingCts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 database.RunCommand<BsonDocument>(new BsonDocument("ping", 1), cancellationToken: pingCts.Token);
 
                 services.AddSingleton(database);
@@ -73,6 +75,9 @@ public static class DependencyInjection
         services.AddSingleton<ISecretVaultService, SecretVaultService>();
         services.AddSingleton<IReportExportService, ReportExportService>();
         var openAiSettings = configuration.GetSection("OpenAi").Get<OpenAiSettings>() ?? new OpenAiSettings();
+        var openAiEnabled = openAiSettings.Enabled &&
+                            (!string.IsNullOrWhiteSpace(openAiSettings.ApiKey) ||
+                             !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
         var azureSpeechSettings = configuration.GetSection("AzureSpeech").Get<AzureSpeechSettings>() ?? new AzureSpeechSettings();
         var azureSpeechEnabled = azureSpeechSettings.Enabled &&
                                  !string.IsNullOrWhiteSpace(azureSpeechSettings.Region) &&
@@ -92,7 +97,7 @@ public static class DependencyInjection
         {
             services.AddSingleton<ITranscriptionService, AzureSpeechTranscriptionService>();
         }
-        else if (openAiSettings.Enabled)
+        else if (openAiEnabled)
         {
             services.AddSingleton<ITranscriptionService, OpenAiTranscriptionService>();
         }

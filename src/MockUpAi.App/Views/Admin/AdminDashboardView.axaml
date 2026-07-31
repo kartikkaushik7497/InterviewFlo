@@ -5,10 +5,43 @@
              x:CompileBindings="False">
     <Grid>
     <Grid RowDefinitions="Auto,*" RowSpacing="14" Margin="8">
-        <TextBlock Text="Admin Control Center" Classes="PageTitle" />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Admin Control Center" Classes="PageTitle" />
+                <TextBlock Text="Create candidates, edit access, monitor submissions, and verify runtime storage from one workspace."
+                           Classes="Muted"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        VerticalAlignment="Center">
+                <Border Background="#1F2A3A"
+                        BorderBrush="#3B82F6"
+                        BorderThickness="1"
+                        CornerRadius="999"
+                        Padding="10,5">
+                    <TextBlock Text="Candidate Setup"
+                               Foreground="#BFDBFE"
+                               FontSize="12"
+                               FontWeight="SemiBold" />
+                </Border>
+                <Border Background="#1F2A3A"
+                        BorderBrush="#14B8A6"
+                        BorderThickness="1"
+                        CornerRadius="999"
+                        Padding="10,5">
+                    <TextBlock Text="Dashboard + Reports"
+                               Foreground="#99F6E4"
+                               FontSize="12"
+                               FontWeight="SemiBold" />
+                </Border>
+            </StackPanel>
+        </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="430,*" ColumnSpacing="16">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Grid.Row="1" ColumnDefinitions="400,*" ColumnSpacing="16">
+            <ScrollViewer x:Name="CandidateFormScrollViewer"
+                          VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="12">
                     <Border Classes="ThemeCard">
                         <StackPanel Spacing="8">
@@ -19,11 +52,11 @@
                             <TextBlock Text="Temporary Password" Classes="Muted" />
                             <TextBox Text="{Binding CandidatePasswordInput, Mode=TwoWay}" PlaceholderText="Strong temp password" />
 
-                            <TextBlock Text="Role" Classes="Muted" />
+                            <TextBlock Text="Interview Role (Tech/IT only - 10 options)" Classes="Muted" />
                             <ComboBox ItemsSource="{Binding AvailableRoles}" SelectedItem="{Binding SelectedJobRole, Mode=TwoWay}" />
 
-                            <TextBlock Text="Job Description" Classes="Muted" />
-                            <TextBox Text="{Binding CandidateJobDescription, Mode=TwoWay}" AcceptsReturn="True" Height="80" TextWrapping="Wrap" PlaceholderText="Role expectations" />
+                            <TextBlock Text="Job Description (optional)" Classes="Muted" />
+                            <TextBox Text="{Binding CandidateJobDescription, Mode=TwoWay}" AcceptsReturn="True" Height="80" TextWrapping="Wrap" PlaceholderText="Optional: stack, responsibilities, must-have skills" />
 
                             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                                 <StackPanel Spacing="4">
@@ -48,14 +81,16 @@
                             <TextBlock Text="Expiry Date (optional)" Classes="Muted" />
                             <TextBox Text="{Binding CandidateExpiryDateInput, Mode=TwoWay}" PlaceholderText="yyyy-MM-dd" />
 
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="8">
                                 <Button Content="Generate Random Key + Password" Command="{Binding GenerateRandomCredentialsCommand}" />
                                 <Button Content="Create Candidate" Classes="Primary" Command="{Binding CreateCandidateCommand}" />
-                            </StackPanel>
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
 
-                    <Border Classes="ThemeCard" IsVisible="{Binding HasSelectedCandidate}">
+                    <Border x:Name="EditCandidatePanel"
+                            Classes="ThemeCard"
+                            IsVisible="{Binding HasSelectedCandidate}">
                         <StackPanel Spacing="8">
                             <TextBlock Text="Edit Selected Candidate" Classes="SectionTitle" />
                             <TextBlock Text="Candidate ID" Classes="Muted" />
@@ -90,7 +125,11 @@
                             <TextBlock Text="Expiry Date (optional)" Classes="Muted" />
                             <TextBox Text="{Binding EditExpiryDateInput, Mode=TwoWay}" PlaceholderText="yyyy-MM-dd" />
 
-                            <CheckBox IsChecked="{Binding EditIsActive, Mode=TwoWay}" Content="Account Active" />
+                            <CheckBox IsChecked="{Binding EditIsActive, Mode=TwoWay}"
+                                      Foreground="#E2E8F0">
+                                <TextBlock Text="Account Active"
+                                           Foreground="#CBD5E1" />
+                            </CheckBox>
 
                             <TextBlock Text="Reset Password" Classes="Muted" />
                             <TextBox Text="{Binding ResetPasswordInput, Mode=TwoWay}" PlaceholderText="New password" />
@@ -98,18 +137,18 @@
                             <TextBlock Text="Delete Confirmation" Classes="Muted" />
                             <TextBox Text="{Binding DeleteConfirmationInput, Mode=TwoWay}" PlaceholderText="Type selected Candidate ID before delete" />
 
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="8">
                                 <Button Content="Update" Command="{Binding UpdateCandidateCommand}" />
                                 <Button Content="Reset Password" Command="{Binding ResetCandidatePasswordCommand}" />
                                 <Button Content="Delete" Classes="Danger" Command="{Binding DeleteCandidateCommand}" />
-                            </StackPanel>
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
 
             <Border Grid.Column="1" Classes="ThemeCard">
-                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" RowSpacing="10">
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                         <TextBlock Text="Candidate Interview Dashboard" Classes="SectionTitle" />
                         <Border Grid.Column="1"
@@ -132,21 +171,107 @@
                         </Border>
                     </Grid>
 
-                    <Grid Grid.Row="1" ColumnDefinitions="2*,1.5*,1.2*,Auto,Auto,Auto" ColumnSpacing="8">
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="8">
+                        <Border Background="#172033"
+                                BorderBrush="#31435F"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Candidates" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding TotalCandidatesDisplay}" Foreground="#F8FAFC" FontSize="23" FontWeight="Bold" />
+                                <TextBlock Text="{Binding ActiveCandidatesDisplay}" Foreground="#93C5FD" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1"
+                                Background="#172033"
+                                BorderBrush="#31435F"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Completed" Foreground="#A7F3D0" FontSize="11" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding CompletedInterviewsDisplay}" Foreground="#ECFDF5" FontSize="23" FontWeight="Bold" />
+                                <TextBlock Text="submitted" Foreground="#99F6E4" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2"
+                                Background="#172033"
+                                BorderBrush="#31435F"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Pending" Foreground="#FED7AA" FontSize="11" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding PendingInterviewsDisplay}" Foreground="#FFF7ED" FontSize="23" FontWeight="Bold" />
+                                <TextBlock Text="not taken" Foreground="#FDBA74" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="3"
+                                Background="#172033"
+                                BorderBrush="#31435F"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Avg Score" Foreground="#BFDBFE" FontSize="11" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding AverageScoreDisplay}" Foreground="#EFF6FF" FontSize="23" FontWeight="Bold" />
+                                <TextBlock Text="latest" Foreground="#93C5FD" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="4"
+                                Background="#172033"
+                                BorderBrush="#31435F"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Pass Rate" Foreground="#DDD6FE" FontSize="11" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding PassRateDisplay}" Foreground="#F5F3FF" FontSize="23" FontWeight="Bold" />
+                                <TextBlock Text="completed" Foreground="#C4B5FD" FontSize="11" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="5"
+                                Background="#172033"
+                                BorderBrush="#31435F"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Storage" Foreground="#CBD5E1" FontSize="11" FontWeight="SemiBold" />
+                                <TextBlock Text="Ready" Foreground="#F8FAFC" FontSize="23" FontWeight="Bold" />
+                                <TextBlock Text="{Binding LastUpdatedDisplay}" Foreground="#94A3B8" FontSize="11" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="2*,1.5*,1.2*,Auto,Auto,Auto" ColumnSpacing="8">
                         <TextBox Text="{Binding SearchText, Mode=TwoWay}" PlaceholderText="Search candidate or role" />
                         <ComboBox Grid.Column="1" ItemsSource="{Binding RoleFilters}" SelectedItem="{Binding SelectedRoleFilter, Mode=TwoWay}" />
                         <ComboBox Grid.Column="2" ItemsSource="{Binding ActiveFilters}" SelectedItem="{Binding SelectedActiveFilter, Mode=TwoWay}" />
-                        <CheckBox Grid.Column="3" IsChecked="{Binding SortDescending, Mode=TwoWay}" Content="Desc" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="3"
+                                  IsChecked="{Binding SortDescending, Mode=TwoWay}"
+                                  Foreground="#E2E8F0"
+                                  VerticalAlignment="Center">
+                            <TextBlock Text="Desc"
+                                       Foreground="#CBD5E1" />
+                        </CheckBox>
                         <Button Grid.Column="4" Content="Apply" Command="{Binding ApplyFiltersCommand}" />
                         <Button Grid.Column="5" Content="Export CSV" Command="{Binding ExportCsvCommand}" />
                     </Grid>
 
-                    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                         <TextBlock Text="{Binding LastUpdatedDisplay}" Classes="Muted" VerticalAlignment="Center" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding LiveUpdatesEnabled, Mode=TwoWay}" Content="Live updates" />
+                        <CheckBox Grid.Column="1"
+                                  IsChecked="{Binding LiveUpdatesEnabled, Mode=TwoWay}"
+                                  Foreground="#E2E8F0">
+                            <TextBlock Text="Live updates"
+                                       Foreground="#CBD5E1" />
+                        </CheckBox>
                     </Grid>
 
-                    <dg:DataGrid Grid.Row="3"
+                    <dg:DataGrid x:Name="CandidateGrid"
+                                 Grid.Row="4"
                                  ItemsSource="{Binding CandidateRows}"
                                  SelectedItem="{Binding SelectedCandidate, Mode=TwoWay}"
                                  AutoGenerateColumns="False"
@@ -168,7 +293,8 @@
                             <dg:DataGridTextColumn Header="Pass Mark" Binding="{Binding PassingScore}" Width="110" />
                             <dg:DataGridTemplateColumn Width="70">
                                 <dg:DataGridTemplateColumn.Header>
-                                    <Button Background="Transparent"
+                                    <Button Classes="IconButton"
+                                            Background="Transparent"
                                             BorderBrush="Transparent"
                                             Padding="4"
                                             ToolTip.Tip="Delete checked candidates"
@@ -187,10 +313,18 @@
                         </dg:DataGrid.Columns>
                     </dg:DataGrid>
 
-                    <Border Grid.Row="4" Classes="ThemeInset">
+                    <Border Grid.Row="5" Classes="ThemeInset">
                         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                             <StackPanel Spacing="6">
+                                <TextBlock Text="Environment status"
+                                           Foreground="#93C5FD"
+                                           FontWeight="SemiBold"
+                                           FontSize="12" />
                                 <TextBlock Text="{Binding StorageStatusMessage}" Foreground="#FDBA74" TextWrapping="Wrap" FontSize="12" />
+                                <TextBlock Text="Interview engine: local heuristic mode by default; transcription: local Whisper with fallback when configured."
+                                           Foreground="#CBD5E1"
+                                           TextWrapping="Wrap"
+                                           FontSize="12" />
                                 <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshCommand}" />

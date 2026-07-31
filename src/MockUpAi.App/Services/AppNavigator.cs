@@ -3,6 +3,7 @@ using MockUpAi.App.ViewModels;
 using MockUpAi.App.ViewModels.Admin;
 using MockUpAi.App.ViewModels.Auth;
 using MockUpAi.App.ViewModels.Candidate;
+using MockUpAi.App.Services.Voice;
 
 namespace MockUpAi.App.Services;
 
@@ -11,15 +12,18 @@ public sealed class AppNavigator : IAppNavigator
     private readonly IServiceProvider _serviceProvider;
     private readonly INavigationService _navigationService;
     private readonly SessionContext _sessionContext;
+    private readonly IInterviewVoiceService _voiceService;
 
     public AppNavigator(
         IServiceProvider serviceProvider,
         INavigationService navigationService,
-        SessionContext sessionContext)
+        SessionContext sessionContext,
+        IInterviewVoiceService voiceService)
     {
         _serviceProvider = serviceProvider;
         _navigationService = navigationService;
         _sessionContext = sessionContext;
+        _voiceService = voiceService;
     }
 
     public Task NavigateToLoginAsync()
@@ -103,6 +107,7 @@ public sealed class AppNavigator : IAppNavigator
 
     public async Task LogoutAsync()
     {
+        _voiceService.Stop();
         _sessionContext.Clear();
         await NavigateToLoginAsync();
     }

@@ -1,26 +1,99 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateRulesView"
              x:CompileBindings="False">
-    <Grid RowDefinitions="*,Auto" RowSpacing="12" Margin="8">
-        <Border Classes="ThemeCard">
-            <StackPanel Spacing="12">
-                <TextBlock Text="Rules and Guidance" Classes="PageTitle" FontSize="28" />
-                <TextBlock Text="Please read this before entering the waiting lobby." Classes="Muted" />
-                <ScrollViewer Height="320">
-                    <TextBlock Text="{Binding RulesText}" TextWrapping="Wrap" Foreground="#E2E8F0" />
-                </ScrollViewer>
-                <CheckBox IsChecked="{Binding HasAcknowledgedRules, Mode=TwoWay}"
-                          Content="I have read, understood, and agree to the rules and permissions." />
-                <Border Classes="ThemeInset">
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
-                </Border>
-            </StackPanel>
-        </Border>
+    <Grid Background="{DynamicResource LightShellBg}" Margin="14">
+        <Border Classes="LightCard"
+                MaxWidth="860"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="22">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" RowSpacing="12">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Rules and Guidance"
+                               Classes="LightPageTitle"
+                               FontSize="28" />
+                    <TextBlock Text="Please read this before entering the waiting lobby."
+                               Classes="LightMuted" />
+                </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-            <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
-            <Button Content="Proceed to Lobby" Classes="Primary" Command="{Binding ContinueCommand}" />
-        </StackPanel>
+                <Border Grid.Row="1"
+                        Background="#F8FAFC"
+                        BorderBrush="#D6E1EA"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12">
+                    <TextBlock Text="Keep your camera and microphone available, answer naturally, and submit only after reviewing your transcript."
+                               Foreground="#334155"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Border Grid.Row="2"
+                        Background="#FFFFFF"
+                        BorderBrush="#D6E1EA"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12">
+                    <ScrollViewer MaxHeight="240"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <TextBlock Text="{Binding RulesText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="#334155"
+                                   LineHeight="20" />
+                    </ScrollViewer>
+                </Border>
+
+                <Border Grid.Row="3"
+                        Background="#F8FAFC"
+                        BorderBrush="#D6E1EA"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12">
+                    <CheckBox IsChecked="{Binding HasAcknowledgedRules, Mode=TwoWay}"
+                              Foreground="#334155"
+                              HorizontalAlignment="Stretch">
+                        <TextBlock Text="I have read, understood, and agree to the rules and permissions."
+                                   Foreground="#334155"
+                                   TextWrapping="Wrap" />
+                    </CheckBox>
+                </Border>
+
+                <Border Grid.Row="4"
+                        Classes="LightInfo"
+                        MinHeight="44">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="#1E3A8A"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center" />
+                </Border>
+
+                <Grid Grid.Row="5"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="12">
+                    <TextBlock Text="You can continue once the acknowledgement is selected."
+                               Classes="LightMuted"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap" />
+                    <WrapPanel Grid.Column="1"
+                               Orientation="Horizontal"
+                               ItemSpacing="10"
+                               LineSpacing="8"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center">
+                        <Button Content="Logout"
+                                Classes="LightDanger"
+                                Command="{Binding LogoutCommand}"
+                                MinWidth="104"
+                                Height="40" />
+                        <Button Content="Proceed to Lobby"
+                                Classes="LightPrimary"
+                                Command="{Binding ContinueCommand}"
+                                MinWidth="156"
+                                Height="40" />
+                    </WrapPanel>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

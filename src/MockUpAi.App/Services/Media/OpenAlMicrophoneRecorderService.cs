@@ -1,4 +1,5 @@
 using System.IO;
+using MockUpAi.App.Models;
 using NAudio.Wave;
 using OpenTK.Audio.OpenAL;
 
@@ -23,6 +24,61 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
     public bool IsRecording { get; private set; }
 
     public string LastError { get; private set; } = string.Empty;
+
+    public double CurrentInputLevel { get; private set; }
+
+    public int SelectedDeviceIndex { get; private set; }
+
+    public Task<IReadOnlyList<MediaDeviceOption>> GetAvailableMicrophonesAsync(CancellationToken cancellationToken = default)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            IReadOnlyList<MediaDeviceOption> fallback =
+            [
+                new MediaDeviceOption { DeviceIndex = 0, DisplayName = "Default microphone" },
+            ];
+
+            return Task.FromResult(fallback);
+        }
+
+        try
+        {
+            var devices = new List<MediaDeviceOption>();
+            for (var i = 0; i < WaveInEvent.DeviceCount; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var caps = WaveInEvent.GetCapabilities(i);
+                var name = string.IsNullOrWhiteSpace(caps.ProductName) ? $"Microphone {i + 1}" : caps.ProductName;
+                devices.Add(new MediaDeviceOption
+                {
+                    DeviceIndex = i,
+                    DisplayName = $"{name} (Device {i})",
+                });
+            }
+
+            if (devices.Count > 0 && !devices.Any(device => device.DeviceIndex == SelectedDeviceIndex))
+            {
+                SelectedDeviceIndex = devices[0].DeviceIndex;
+            }
+
+            return Task.FromResult<IReadOnlyList<MediaDeviceOption>>(devices);
+        }
+        catch (Exception ex)
+        {
+            LastError = $"Unable to list microphones: {ex.Message}";
+            return Task.FromResult<IReadOnlyList<MediaDeviceOption>>([]);
+        }
+    }
+
+    public void SelectMicrophone(int deviceIndex)
+    {
+        if (IsRecording || deviceIndex < 0)
+        {
+            return;
+        }
+
+        SelectedDeviceIndex = deviceIndex;
+    }
 
     public Task<bool> CanAccessMicrophoneAsync()
     {
@@ -99,7 +155,12 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
                 return false;
             }
 
-            _ = WaveInEvent.GetCapabilities(0);
+            if (SelectedDeviceIndex < 0 || SelectedDeviceIndex >= count)
+            {
+                SelectedDeviceIndex = 0;
+            }
+
+            _ = WaveInEvent.GetCapabilities(SelectedDeviceIndex);
             LastError = string.Empty;
             return true;
         }
@@ -121,7 +182,7 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
 
             _waveIn = new WaveInEvent
             {
-                DeviceNumber = 0,
+                DeviceNumber = SelectedDeviceIndex,
                 BufferMilliseconds = 100,
                 WaveFormat = new WaveFormat(SampleRate, 16, 1),
             };
@@ -176,6 +237,8 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
 
     private void OnWaveInDataAvailable(object? sender, WaveInEventArgs e)
     {
+        UpdateWaveInputLevel(e.Buffer, e.BytesRecorded);
+
         lock (_waveSync)
         {
             _wavePcmBuffer?.Write(e.Buffer, 0, e.BytesRecorded);
@@ -305,6 +368,8 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
                     {
                         _capturedSamples.AddRange(buffer);
                     }
+
+                    UpdateSampleInputLevel(buffer);
                 }
 
                 await Task.Delay(50, cancellationToken);
@@ -319,6 +384,36 @@ public sealed class OpenAlMicrophoneRecorderService : IMicrophoneRecorderService
                 break;
             }
         }
+    }
+
+    private void UpdateWaveInputLevel(byte[] buffer, int bytesRecorded)
+    {
+        if (bytesRecorded <= 1)
+        {
+            CurrentInputLevel = 0;
+            return;
+        }
+
+        var peak = 0;
+        for (var i = 0; i + 1 < bytesRecorded; i += 2)
+        {
+            var sample = BitConverter.ToInt16(buffer, i);
+            peak = Math.Max(peak, Math.Abs((int)sample));
+        }
+
+        CurrentInputLevel = Math.Clamp(peak / 32768.0, 0, 1);
+    }
+
+    private void UpdateSampleInputLevel(IReadOnlyList<short> samples)
+    {
+        if (samples.Count == 0)
+        {
+            CurrentInputLevel = 0;
+            return;
+        }
+
+        var peak = samples.Max(sample => Math.Abs((int)sample));
+        CurrentInputLevel = Math.Clamp(peak / 32768.0, 0, 1);
     }
 
     private static byte[] BuildWav(IReadOnlyList<short> samples, int sampleRate)

@@ -18,8 +18,9 @@ public sealed class CandidateCreateRequest
 
     public double PassingScore { get; set; } = 60;
 
-    public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.OpenAi;
-    public string InterviewerVoiceProfile { get; set; } = "OpenAI:Nova";
+    public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.Heuristic;
+
+    public string InterviewerVoiceProfile { get; set; } = "Windows:Natural";
 
     public DateTime? ExpiresAtUtc { get; set; }
 

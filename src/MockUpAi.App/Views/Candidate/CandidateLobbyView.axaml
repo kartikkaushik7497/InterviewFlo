@@ -1,22 +1,74 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateLobbyView"
              x:CompileBindings="False">
-    <Border Classes="ThemeCard" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760" Margin="8">
-        <StackPanel Spacing="14" HorizontalAlignment="Center">
-            <TextBlock Text="Interview Waiting Lobby" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
-            <TextBlock Text="Your interview auto-starts quickly after the timer." Classes="Muted" HorizontalAlignment="Center" />
+    <Grid Background="{DynamicResource LightShellBg}" Margin="14">
+        <Border Classes="LightCard"
+                MaxWidth="620"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Padding="24">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="16">
+                <StackPanel Spacing="5"
+                            HorizontalAlignment="Center">
+                    <TextBlock Text="Interview Waiting Lobby"
+                               Classes="LightPageTitle"
+                               FontSize="28"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center" />
+                    <TextBlock Text="Your interview auto-starts quickly after the timer."
+                               Classes="LightMuted"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center" />
+                </StackPanel>
 
-            <Border Classes="ThemeInset" Padding="20" HorizontalAlignment="Center">
-                <TextBlock Text="{Binding CountdownDisplay}" FontSize="56" FontWeight="Bold" Foreground="#38BDF8" HorizontalAlignment="Center" />
-            </Border>
+                <Border Grid.Row="1"
+                        Background="#EFF6FF"
+                        BorderBrush="#BFDBFE"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="22,18"
+                        HorizontalAlignment="Center"
+                        MinWidth="190">
+                    <TextBlock Text="{Binding CountdownDisplay}"
+                               FontSize="52"
+                               FontWeight="Bold"
+                               Foreground="#2563EB"
+                               HorizontalAlignment="Center" />
+                </Border>
 
-            <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                <Border Grid.Row="2"
+                        Background="#F8FAFC"
+                        BorderBrush="#D6E1EA"
+                        BorderThickness="1"
+                        CornerRadius="10"
+                        Padding="12"
+                        MinHeight="48">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="#334155"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap" />
+                </Border>
 
-            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                <Button Content="Start Interview Now" Classes="Primary" Command="{Binding StartNowCommand}" />
-                <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
-            </StackPanel>
-        </StackPanel>
-    </Border>
+                <WrapPanel Grid.Row="3"
+                           Orientation="Horizontal"
+                           ItemSpacing="10"
+                           LineSpacing="8"
+                           HorizontalAlignment="Center">
+                    <Button Content="Start Interview Now"
+                            Classes="LightPrimary"
+                            Command="{Binding StartNowCommand}"
+                            MinWidth="170"
+                            Height="42" />
+                    <Button Content="Logout"
+                            Classes="LightDanger"
+                            Command="{Binding LogoutCommand}"
+                            MinWidth="104"
+                            Height="42" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>

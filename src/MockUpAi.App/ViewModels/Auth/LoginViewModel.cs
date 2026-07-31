@@ -51,9 +51,7 @@ public partial class LoginViewModel : ViewModelBase
 
     private bool CanLogin()
     {
-        return !IsBusy &&
-               !string.IsNullOrWhiteSpace(UserId) &&
-               !string.IsNullOrWhiteSpace(Password);
+        return !IsBusy;
     }
 
     partial void OnStatusMessageChanged(string value)
@@ -72,6 +70,12 @@ public partial class LoginViewModel : ViewModelBase
         IsBusy = true;
         try
         {
+            if (string.IsNullOrWhiteSpace(UserId) || string.IsNullOrWhiteSpace(Password))
+            {
+                StatusMessage = "Enter both user ID and password to continue.";
+                return;
+            }
+
             StatusMessage = "Authenticating...";
             var result = await _authService.LoginAsync(UserId, Password);
             if (!result.IsSuccess || result.User is null)

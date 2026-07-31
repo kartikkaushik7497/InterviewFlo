@@ -60,6 +60,31 @@ internal sealed class InMemoryInterviewRepository : IInterviewRepository
         }
     }
 
+    public async Task<IReadOnlyDictionary<string, InterviewSession>> GetLatestByCandidateUserIdsAsync(
+        IReadOnlyCollection<string> candidateUserIds,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            var ids = candidateUserIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return _sessions
+                .Where(x => ids.Contains(x.CandidateUserId))
+                .GroupBy(x => x.CandidateUserId, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .OrderByDescending(x => x.CompletedAtUtc ?? x.StartedAtUtc)
+                        .ThenByDescending(x => x.StartedAtUtc)
+                        .First(),
+                    StringComparer.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async Task DeleteByCandidateUserIdAsync(string candidateUserId, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);

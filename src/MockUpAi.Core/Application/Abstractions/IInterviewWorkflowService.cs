@@ -9,9 +9,15 @@ public interface IInterviewWorkflowService
 
     Task<InterviewSubmitResult> SubmitAnswerAsync(string transcript, CancellationToken cancellationToken = default);
 
+    Task<InterviewSubmitResult> ResubmitAnswerAsync(string questionId, string transcript, CancellationToken cancellationToken = default);
+
     Task<InterviewSession> FinishInterviewAsync(CancellationToken cancellationToken = default);
 
     InterviewQuestion? GetCurrentQuestion();
+
+    InterviewQuestion? GetQuestionById(string questionId);
+
+    InterviewQuestionResult? GetQuestionResult(string questionId);
 
     int GetCurrentQuestionIndex();
 

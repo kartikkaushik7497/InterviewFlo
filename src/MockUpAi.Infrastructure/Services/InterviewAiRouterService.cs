@@ -1,6 +1,8 @@
 using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Domain.Entities;
 using MockUpAi.Core.Domain.Enums;
+using MockUpAi.Infrastructure.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace MockUpAi.Infrastructure.Services;
 
@@ -9,15 +11,21 @@ internal sealed class InterviewAiRouterService : IInterviewAiService
     private readonly OpenAiInterviewAiService _openAi;
     private readonly GeminiInterviewAiService _gemini;
     private readonly HeuristicInterviewAiService _heuristic;
+    private readonly OpenAiSettings _openAiSettings;
+    private readonly GeminiSettings _geminiSettings;
 
     public InterviewAiRouterService(
         OpenAiInterviewAiService openAi,
         GeminiInterviewAiService gemini,
-        HeuristicInterviewAiService heuristic)
+        HeuristicInterviewAiService heuristic,
+        IOptions<OpenAiSettings> openAiSettings,
+        IOptions<GeminiSettings> geminiSettings)
     {
         _openAi = openAi;
         _gemini = gemini;
         _heuristic = heuristic;
+        _openAiSettings = openAiSettings.Value;
+        _geminiSettings = geminiSettings.Value;
     }
 
     public Task<IReadOnlyList<InterviewQuestion>> GenerateQuestionsAsync(
@@ -93,9 +101,22 @@ internal sealed class InterviewAiRouterService : IInterviewAiService
     {
         return provider switch
         {
-            InterviewAiProvider.Gemini => _gemini,
+            InterviewAiProvider.Gemini when IsGeminiConfigured() => _gemini,
+            InterviewAiProvider.OpenAi when IsOpenAiConfigured() => _openAi,
             InterviewAiProvider.Heuristic => _heuristic,
-            _ => _openAi,
+            _ => _heuristic,
         };
+    }
+
+    private bool IsOpenAiConfigured()
+    {
+        return _openAiSettings.Enabled &&
+               (!string.IsNullOrWhiteSpace(_openAiSettings.ApiKey) ||
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY")));
+    }
+
+    private bool IsGeminiConfigured()
+    {
+        return _geminiSettings.Enabled && !string.IsNullOrWhiteSpace(_geminiSettings.ApiKey);
     }
 }

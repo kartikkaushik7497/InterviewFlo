@@ -2,37 +2,48 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateFeedbackView"
              x:CompileBindings="False">
-    <Grid RowDefinitions="*,Auto" RowSpacing="12" Margin="8">
-        <Border Classes="ThemeCard" Width="760" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20">
+    <Grid RowDefinitions="*,Auto" RowSpacing="12" Margin="12" Background="{DynamicResource LightShellBg}">
+        <Border Classes="LightCard" MaxWidth="760" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="22">
             <StackPanel Spacing="12">
-                <TextBlock Text="Interview Feedback" Classes="PageTitle" FontSize="30" HorizontalAlignment="Center" />
-                <TextBlock Text="Rate your interview experience and share suggestions." Classes="Muted" HorizontalAlignment="Center" />
+                <TextBlock Text="Interview Feedback" Classes="LightPageTitle" FontSize="28" HorizontalAlignment="Center" />
+                <TextBlock Text="Rate your interview experience and share suggestions." Classes="LightMuted" HorizontalAlignment="Center" />
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
-                    <Button Content="{Binding Star1}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="1" />
-                    <Button Content="{Binding Star2}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="2" />
-                    <Button Content="{Binding Star3}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="3" />
-                    <Button Content="{Binding Star4}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="4" />
-                    <Button Content="{Binding Star5}" Width="52" Height="52" FontSize="24" Command="{Binding SetRatingCommand}" CommandParameter="5" />
+                    <Button Content="{Binding Star1}" Classes="LightNeutral" Width="48" Height="48" FontSize="22" Command="{Binding SetRatingCommand}" CommandParameter="1" />
+                    <Button Content="{Binding Star2}" Classes="LightNeutral" Width="48" Height="48" FontSize="22" Command="{Binding SetRatingCommand}" CommandParameter="2" />
+                    <Button Content="{Binding Star3}" Classes="LightNeutral" Width="48" Height="48" FontSize="22" Command="{Binding SetRatingCommand}" CommandParameter="3" />
+                    <Button Content="{Binding Star4}" Classes="LightNeutral" Width="48" Height="48" FontSize="22" Command="{Binding SetRatingCommand}" CommandParameter="4" />
+                    <Button Content="{Binding Star5}" Classes="LightNeutral" Width="48" Height="48" FontSize="22" Command="{Binding SetRatingCommand}" CommandParameter="5" />
                 </StackPanel>
 
-                <TextBlock Text="Suggestions / Comments" Classes="Muted" />
+                <TextBlock Text="Suggestions / Comments" Classes="LightMuted" />
                 <TextBox Text="{Binding Suggestions, Mode=TwoWay}"
+                         Classes="LightInput"
                          AcceptsReturn="True"
                          Height="140"
                          TextWrapping="Wrap"
                          PlaceholderText="Share what could be improved or what worked well..." />
 
-                <Border Classes="ThemeInset">
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#E2E8F0" TextWrapping="Wrap" />
+                <Border Classes="LightInfo">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#1E3A8A" TextWrapping="Wrap" />
                 </Border>
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-            <Button Content="Submit Feedback" Classes="Primary" Command="{Binding SubmitFeedbackCommand}" />
-            <Button Content="View Result" Command="{Binding ContinueCommand}" />
-            <Button Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
-        </StackPanel>
+        <Border Grid.Row="1"
+                Background="#FFFFFF"
+                BorderBrush="#CBD5E1"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="10">
+            <WrapPanel Orientation="Horizontal"
+                       ItemSpacing="8"
+                       LineSpacing="8"
+                       HorizontalAlignment="Right">
+                <Button Content="Submit Feedback" Classes="LightPrimary" Command="{Binding SubmitFeedbackCommand}" MinWidth="138" />
+                <Button Content="View Submission" Classes="LightNeutral" Command="{Binding ContinueCommand}" MinWidth="132" />
+                <Button Content="Logout" Classes="LightDanger" Command="{Binding LogoutCommand}" MinWidth="92" />
+            </WrapPanel>
+        </Border>
     </Grid>
 </UserControl>

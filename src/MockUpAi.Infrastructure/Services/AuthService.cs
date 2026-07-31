@@ -1,6 +1,8 @@
 ﻿using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Application.Dtos;
 using MockUpAi.Core.Common;
+using MockUpAi.Core.Domain.Entities;
+using MongoDB.Driver;
 
 namespace MockUpAi.Infrastructure.Services;
 
@@ -22,7 +24,13 @@ internal sealed class AuthService : IAuthService
             return new AuthResult(false, "Enter both user id and password.", null, false);
         }
 
-        var user = await _users.GetByUserIdAsync(userId.Trim(), cancellationToken);
+        var lookup = await GetUserForLoginAsync(userId.Trim(), cancellationToken);
+        if (lookup.StorageUnavailableMessage is not null)
+        {
+            return new AuthResult(false, lookup.StorageUnavailableMessage, null, false);
+        }
+
+        var user = lookup.User;
         if (user is null)
         {
             return new AuthResult(false, "Account not found.", null, false);
@@ -46,7 +54,14 @@ internal sealed class AuthService : IAuthService
 
         user.LastLoginAtUtc = DateTime.UtcNow;
         user.UpdatedAtUtc = DateTime.UtcNow;
-        await _users.UpdateAsync(user, cancellationToken);
+        try
+        {
+            await _users.UpdateAsync(user, cancellationToken);
+        }
+        catch (Exception ex) when (IsStorageUnavailable(ex))
+        {
+            // Last-login tracking should not block an otherwise verified login.
+        }
 
         if (user.MustChangePassword)
         {
@@ -58,7 +73,16 @@ internal sealed class AuthService : IAuthService
 
     public async Task<OperationResult> CompletePasswordResetAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
     {
-        var user = await _users.GetByUserIdAsync(userId, cancellationToken);
+        AppUser? user;
+        try
+        {
+            user = await _users.GetByUserIdAsync(userId, cancellationToken);
+        }
+        catch (Exception ex) when (IsStorageUnavailable(ex))
+        {
+            return OperationResult.Failure(BuildStorageUnavailableMessage());
+        }
+
         if (user is null)
         {
             return OperationResult.Failure("User not found.");
@@ -74,7 +98,56 @@ internal sealed class AuthService : IAuthService
         user.PasswordChangedAtUtc = DateTime.UtcNow;
         user.UpdatedAtUtc = DateTime.UtcNow;
 
-        await _users.UpdateAsync(user, cancellationToken);
+        try
+        {
+            await _users.UpdateAsync(user, cancellationToken);
+        }
+        catch (Exception ex) when (IsStorageUnavailable(ex))
+        {
+            return OperationResult.Failure(BuildStorageUnavailableMessage());
+        }
+
         return OperationResult.Success("Password updated successfully.");
+    }
+
+    private async Task<(AppUser? User, string? StorageUnavailableMessage)> GetUserForLoginAsync(
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await _users.GetByUserIdAsync(userId, cancellationToken), null);
+        }
+        catch (Exception ex) when (IsStorageUnavailable(ex))
+        {
+            return (null, BuildStorageUnavailableMessage());
+        }
+    }
+
+    private static bool IsStorageUnavailable(Exception ex)
+    {
+        for (var current = ex; current is not null; current = current.InnerException)
+        {
+            if (current is MongoConnectionException ||
+                current is MongoExecutionTimeoutException ||
+                current is MongoWaitQueueFullException ||
+                current is TimeoutException)
+            {
+                return true;
+            }
+
+            if (current is InvalidOperationException &&
+                current.Message.Contains("MongoDB is reconnecting", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string BuildStorageUnavailableMessage()
+    {
+        return "MongoDB is reconnecting or temporarily unreachable. Wait a few seconds and press Login again; restarting the app should not be necessary.";
     }
 }

@@ -42,9 +42,9 @@ public partial class AdminDashboardViewModel : ViewModelBase
     private string _selectedDifficulty = "Fresher";
 
     [ObservableProperty]
-    private string _selectedAiProvider = "OpenAi";
+    private string _selectedAiProvider = "Heuristic";
     [ObservableProperty]
-    private string _selectedInterviewerVoice = "OpenAI:Nova";
+    private string _selectedInterviewerVoice = "Windows:Natural";
 
     [ObservableProperty]
     private string _candidatePassingScoreInput = "60";
@@ -72,9 +72,9 @@ public partial class AdminDashboardViewModel : ViewModelBase
     private string _editDifficulty = "Fresher";
 
     [ObservableProperty]
-    private string _editAiProvider = "OpenAi";
+    private string _editAiProvider = "Heuristic";
     [ObservableProperty]
-    private string _editInterviewerVoice = "OpenAI:Nova";
+    private string _editInterviewerVoice = "Windows:Natural";
 
     [ObservableProperty]
     private string _editPassingScoreInput = "60";
@@ -132,14 +132,32 @@ public partial class AdminDashboardViewModel : ViewModelBase
     [ObservableProperty]
     private string _lastUpdatedDisplay = "Not refreshed yet";
 
+    [ObservableProperty]
+    private string _totalCandidatesDisplay = "0";
+
+    [ObservableProperty]
+    private string _completedInterviewsDisplay = "0";
+
+    [ObservableProperty]
+    private string _pendingInterviewsDisplay = "0";
+
+    [ObservableProperty]
+    private string _averageScoreDisplay = "0.0";
+
+    [ObservableProperty]
+    private string _passRateDisplay = "0%";
+
+    [ObservableProperty]
+    private string _activeCandidatesDisplay = "0 active";
+
     public ObservableCollection<AdminCandidateRowViewModel> CandidateRows { get; } = [];
 
     public IReadOnlyList<string> AvailableRoles => RoleCatalog.Items;
     public IReadOnlyList<string> CategoryOptions { get; } = ["Technical", "Behavioral", "Hr", "Management"];
     public IReadOnlyList<string> DifficultyOptions { get; } = ["Fresher", "Experienced", "Professional"];
-    public IReadOnlyList<string> AiProviderOptions { get; } = ["OpenAi", "Gemini", "Heuristic"];
+    public IReadOnlyList<string> AiProviderOptions { get; } = ["Heuristic", "OpenAi", "Gemini"];
     public IReadOnlyList<string> InterviewerVoiceOptions { get; } =
-        ["OpenAI:Nova", "OpenAI:Alloy", "OpenAI:Shimmer", "OpenAI:Echo", "OpenAI:Fable", "OpenAI:Onyx", "Windows:Heera", "Windows:Ravi", "Windows:Zira", "Windows:Mark", "Windows:David", "ElevenLabs:Patrick", "ElevenLabs:Neal"];
+        ["Windows:Natural", "Windows:Zira", "Windows:David", "Windows:Mark", "Windows:Heera", "Windows:Ravi", "OpenAI:Nova", "OpenAI:Alloy", "OpenAI:Shimmer", "OpenAI:Echo", "OpenAI:Fable", "OpenAI:Onyx", "ElevenLabs:Patrick", "ElevenLabs:Neal"];
 
     public IReadOnlyList<string> RoleFilters { get; } = ["All Roles", .. RoleCatalog.Items];
 
@@ -214,7 +232,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
                 InterviewerVoiceProfile = SelectedInterviewerVoice,
                 PassingScore = ParsePassingScore(CandidatePassingScoreInput),
                 ExpiresAtUtc = expiry,
-                MustChangePasswordOnFirstLogin = true,
+                MustChangePasswordOnFirstLogin = false,
             };
 
             var result = await _adminService.CreateCandidateAsync(request);
@@ -227,12 +245,13 @@ public partial class AdminDashboardViewModel : ViewModelBase
             CandidateIdInput = string.Empty;
             CandidatePasswordInput = string.Empty;
             CandidateJobDescription = string.Empty;
+            SelectedJobRole = RoleCatalog.Items[0];
             CandidateExpiryDateInput = string.Empty;
             CandidatePassingScoreInput = "60";
             SelectedCategory = "Technical";
             SelectedDifficulty = "Fresher";
-            SelectedAiProvider = "OpenAi";
-            SelectedInterviewerVoice = "OpenAI:Nova";
+            SelectedAiProvider = "Heuristic";
+            SelectedInterviewerVoice = "Windows:Natural";
 
             await RefreshAsync();
         }
@@ -317,7 +336,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
             {
                 CandidateId = SelectedCandidate.CandidateId,
                 NewPassword = ResetPasswordInput,
-                MustChangeOnNextLogin = true,
+                MustChangeOnNextLogin = false,
             });
 
             StatusMessage = result.Message;
@@ -447,6 +466,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
                 StatusMessage = $"Loaded {CandidateRows.Count} candidate records.";
             }
 
+            UpdateDashboardSummary();
             LastUpdatedDisplay = $"Last updated {DateTime.Now:HH:mm:ss}";
         }
         finally
@@ -597,8 +617,8 @@ public partial class AdminDashboardViewModel : ViewModelBase
             EditJobDescription = string.Empty;
             EditCategory = "Technical";
             EditDifficulty = "Fresher";
-            EditAiProvider = "OpenAi";
-            EditInterviewerVoice = "OpenAI:Nova";
+            EditAiProvider = "Heuristic";
+            EditInterviewerVoice = "Windows:Natural";
             EditPassingScoreInput = "60";
             EditExpiryDateInput = string.Empty;
             EditIsActive = true;
@@ -754,6 +774,29 @@ public partial class AdminDashboardViewModel : ViewModelBase
         };
     }
 
+    private void UpdateDashboardSummary()
+    {
+        var rows = CandidateRows.ToList();
+        var total = rows.Count;
+        var completed = rows.Count(x => x.InterviewStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase));
+        var pending = rows.Count(x => x.InterviewStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase));
+        var active = rows.Count(x => x.IsActive && !x.IsExpired);
+        var scoredRows = rows
+            .Where(x => x.LatestInterviewScore > 0 || x.QuestionsAnswered > 0)
+            .ToList();
+        var averageScore = scoredRows.Count == 0 ? 0 : scoredRows.Average(x => x.LatestInterviewScore);
+        var passRate = completed == 0
+            ? 0
+            : rows.Count(x => x.InterviewStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase) && x.IsPassed) * 100.0 / completed;
+
+        TotalCandidatesDisplay = total.ToString();
+        CompletedInterviewsDisplay = completed.ToString();
+        PendingInterviewsDisplay = pending.ToString();
+        ActiveCandidatesDisplay = $"{active} active";
+        AverageScoreDisplay = averageScore.ToString("0.0");
+        PassRateDisplay = $"{passRate:0}%";
+    }
+
     private static InterviewCategory ParseCategory(string value)
     {
         return Enum.TryParse<InterviewCategory>(value, true, out var parsed)
@@ -772,7 +815,7 @@ public partial class AdminDashboardViewModel : ViewModelBase
     {
         return Enum.TryParse<InterviewAiProvider>(value, true, out var parsed)
             ? parsed
-            : InterviewAiProvider.OpenAi;
+            : InterviewAiProvider.Heuristic;
     }
 
     private static double ParsePassingScore(string value)

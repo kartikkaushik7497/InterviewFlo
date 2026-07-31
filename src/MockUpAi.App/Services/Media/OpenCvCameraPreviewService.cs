@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+using Avalonia.Media.Imaging;
+using MockUpAi.App.Models;
 using OpenCvSharp;
 
 namespace MockUpAi.App.Services.Media;
@@ -15,14 +16,63 @@ public sealed class OpenCvCameraPreviewService : ICameraPreviewService
 
     public string LastError { get; private set; } = string.Empty;
 
+    public int SelectedDeviceIndex { get; private set; }
+
+    public Task<IReadOnlyList<MediaDeviceOption>> GetAvailableCamerasAsync(CancellationToken cancellationToken = default)
+    {
+        var devices = new List<MediaDeviceOption>();
+
+        try
+        {
+            for (var i = 0; i < 6; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                using var probe = new VideoCapture(i);
+                if (!probe.IsOpened())
+                {
+                    continue;
+                }
+
+                devices.Add(new MediaDeviceOption
+                {
+                    DeviceIndex = i,
+                    DisplayName = $"Camera {i + 1} (Device {i})",
+                });
+            }
+
+            if (devices.Count > 0 && !devices.Any(device => device.DeviceIndex == SelectedDeviceIndex))
+            {
+                SelectedDeviceIndex = devices[0].DeviceIndex;
+            }
+
+            LastError = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            LastError = $"Unable to list cameras: {ex.Message}";
+        }
+
+        return Task.FromResult<IReadOnlyList<MediaDeviceOption>>(devices);
+    }
+
+    public void SelectCamera(int deviceIndex)
+    {
+        if (IsRunning || deviceIndex < 0)
+        {
+            return;
+        }
+
+        SelectedDeviceIndex = deviceIndex;
+    }
+
     public Task<bool> CanAccessCameraAsync()
     {
         try
         {
-            using var probe = new VideoCapture(0);
+            using var probe = new VideoCapture(SelectedDeviceIndex);
             if (!probe.IsOpened())
             {
-                LastError = "Unable to access camera device.";
+                LastError = $"Unable to access camera device {SelectedDeviceIndex}.";
                 return Task.FromResult(false);
             }
 
@@ -45,10 +95,10 @@ public sealed class OpenCvCameraPreviewService : ICameraPreviewService
 
         try
         {
-            _capture = new VideoCapture(0);
+            _capture = new VideoCapture(SelectedDeviceIndex);
             if (!_capture.IsOpened())
             {
-                LastError = "Unable to open camera stream.";
+                LastError = $"Unable to open camera device {SelectedDeviceIndex}.";
                 _capture.Dispose();
                 _capture = null;
                 return false;

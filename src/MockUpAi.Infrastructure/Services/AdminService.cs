@@ -55,12 +55,12 @@ internal sealed class AdminService : IAdminService
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             ActorType = UserActorType.Candidate,
             JobRole = request.JobRole.Trim(),
-            JobDescription = request.JobDescription.Trim(),
+            JobDescription = (request.JobDescription ?? string.Empty).Trim(),
             InterviewCategory = request.Category,
             InterviewDifficulty = request.Difficulty,
             PassingScore = Math.Clamp(request.PassingScore, 1, 100),
             AiProvider = request.AiProvider,
-            InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "OpenAI:Nova" : request.InterviewerVoiceProfile.Trim(),
+            InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "Windows:Natural" : request.InterviewerVoiceProfile.Trim(),
             IsActive = true,
             ExpiresAtUtc = request.ExpiresAtUtc,
             MustChangePassword = request.MustChangePasswordOnFirstLogin,
@@ -88,12 +88,12 @@ internal sealed class AdminService : IAdminService
         }
 
         candidate.JobRole = request.JobRole.Trim();
-        candidate.JobDescription = request.JobDescription.Trim();
+        candidate.JobDescription = (request.JobDescription ?? string.Empty).Trim();
         candidate.InterviewCategory = request.Category;
         candidate.InterviewDifficulty = request.Difficulty;
         candidate.PassingScore = Math.Clamp(request.PassingScore, 1, 100);
         candidate.AiProvider = request.AiProvider;
-        candidate.InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "OpenAI:Nova" : request.InterviewerVoiceProfile.Trim();
+        candidate.InterviewerVoiceProfile = string.IsNullOrWhiteSpace(request.InterviewerVoiceProfile) ? "Windows:Natural" : request.InterviewerVoiceProfile.Trim();
         candidate.ExpiresAtUtc = request.ExpiresAtUtc;
         candidate.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -205,16 +205,15 @@ internal sealed class AdminService : IAdminService
     public async Task<IReadOnlyList<CandidateDashboardRow>> GetDashboardRowsAsync(CandidateDashboardQuery query, CancellationToken cancellationToken = default)
     {
         var candidates = await _users.GetCandidatesAsync(cancellationToken);
-        var sessions = await _interviews.GetAllAsync(cancellationToken);
+        var latestByCandidate = await _interviews.GetLatestByCandidateUserIdsAsync(
+            candidates.Select(x => x.UserId).ToList(),
+            cancellationToken);
 
         var rows = new List<CandidateDashboardRow>();
 
         foreach (var candidate in candidates)
         {
-            var latest = sessions
-                .Where(x => x.CandidateUserId.Equals(candidate.UserId, StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(x => x.CompletedAtUtc ?? x.StartedAtUtc)
-                .FirstOrDefault();
+            latestByCandidate.TryGetValue(candidate.UserId, out var latest);
 
             var isExpired = candidate.ExpiresAtUtc.HasValue && candidate.ExpiresAtUtc <= DateTime.UtcNow;
 

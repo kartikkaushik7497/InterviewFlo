@@ -10,5 +10,9 @@ public interface IInterviewRepository
 
     Task<IReadOnlyList<InterviewSession>> GetByCandidateUserIdAsync(string candidateUserId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyDictionary<string, InterviewSession>> GetLatestByCandidateUserIdsAsync(
+        IReadOnlyCollection<string> candidateUserIds,
+        CancellationToken cancellationToken = default);
+
     Task DeleteByCandidateUserIdAsync(string candidateUserId, CancellationToken cancellationToken = default);
 }

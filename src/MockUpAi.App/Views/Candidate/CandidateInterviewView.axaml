@@ -2,165 +2,836 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MockUpAi.App.Views.Candidate.CandidateInterviewView"
              x:CompileBindings="False">
-    <Grid ClipToBounds="True" Background="#F3F6FA">
-        <Grid IsHitTestVisible="False" Opacity="0.35">
-            <Canvas>
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="64" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="128" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="192" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="256" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="320" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="384" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="448" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="512" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="576" />
-                <Border Width="2600" Height="1" Background="#2F94A3B8" Canvas.Top="640" />
+    <UserControl.Styles>
+        <Style Selector="TextBox.InterviewAnswer">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="#111827" />
+            <Setter Property="CaretBrush" Value="#2563EB" />
+            <Setter Property="SelectionBrush" Value="#BFDBFE" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
 
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="90" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="180" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="270" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="360" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="450" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="540" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="630" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="720" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="810" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="900" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="990" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="1080" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="1170" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="1260" />
-                <Border Width="1" Height="1800" Background="#2A8A9AAE" Canvas.Left="1350" />
-            </Canvas>
-        </Grid>
+        <Style Selector="TextBox.InterviewAnswer:pointerover">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#93C5FD" />
+        </Style>
 
-        <Canvas IsHitTestVisible="False">
-            <Border Canvas.Left="210" Canvas.Top="140" Width="96" Height="96" CornerRadius="48" Background="#8EEA580C" BoxShadow="0 0 34 10 #66EA580C" />
-            <Border Canvas.Left="300" Canvas.Top="450" Width="50" Height="50" CornerRadius="25" Background="#8EE11D48" BoxShadow="0 0 26 8 #66E11D48" />
-            <Border Canvas.Right="150" Canvas.Top="170" Width="150" Height="250" CornerRadius="80" Background="#5922C55E" BoxShadow="0 0 90 20 #4422C55E" />
-            <Border Canvas.Right="220" Canvas.Top="430" Width="46" Height="46" CornerRadius="23" Background="#8EBE123C" BoxShadow="0 0 26 8 #66BE123C" />
-        </Canvas>
+        <Style Selector="TextBox.InterviewAnswer:focus, TextBox.InterviewAnswer:focus-within">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#2563EB" />
+        </Style>
 
-        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12" Margin="10">
-        <Border Background="#F8F9FB" BorderBrush="#CDD5DF" BorderThickness="1" CornerRadius="10" Padding="12">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <StackPanel Spacing="3">
-                    <TextBlock Text="Live Interview Desk" Foreground="#132A32" FontWeight="Bold" FontSize="30" />
-                    <TextBlock Text="{Binding JobRole}" Foreground="#50636B" FontSize="14" />
-                    <TextBlock Text="{Binding InterviewCategory}" Foreground="#4F7A86" FontSize="13" />
-                    <TextBlock Text="{Binding CameraStatus}" Foreground="#6D7C84" FontSize="12" />
-                </StackPanel>
+        <Style Selector="TextBox.InterviewAnswer /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#CBD5E1" />
+        </Style>
 
-                <Border Grid.Column="1" Background="#F1F5F8" BorderBrush="#C9D4DB" BorderThickness="1" CornerRadius="8" Padding="10,6">
-                    <StackPanel HorizontalAlignment="Right">
-                        <TextBlock Text="Question" Foreground="#55656E" FontSize="12" HorizontalAlignment="Right" />
-                        <TextBlock Text="{Binding QuestionNumber}" Foreground="#15323B" FontWeight="Bold" FontSize="22" HorizontalAlignment="Right" />
-                        <TextBlock Text="{Binding TotalQuestions}" Foreground="#6E7F88" FontSize="12" HorizontalAlignment="Right" />
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </Border>
+        <Style Selector="TextBox.InterviewAnswer:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#93C5FD" />
+        </Style>
 
-        <Grid Grid.Row="1" ColumnDefinitions="1.9*,1*" ColumnSpacing="12">
-            <Border Background="#F8F9FB" BorderBrush="#CDD5DF" BorderThickness="1" CornerRadius="10" Padding="10">
-                <Grid RowDefinitions="*,Auto,Auto,Auto,Auto" RowSpacing="8">
-                    <Border Grid.Row="0" Background="#ECEFF3" BorderBrush="#D5DEE7" BorderThickness="1" CornerRadius="10" Padding="8">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <ItemsControl ItemsSource="{Binding ChatMessages}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,3,0,3">
-                                            <Border MaxWidth="540"
-                                                    Padding="10"
-                                                    CornerRadius="10"
-                                                    HorizontalAlignment="{Binding BubbleAlignment}"
-                                                    Background="{Binding BubbleBackground}"
-                                                    BorderBrush="{Binding BubbleBorder}"
-                                                    BorderThickness="1">
-                                                <StackPanel Spacing="3">
-                                                    <TextBlock Text="{Binding Sender}" Foreground="{Binding SenderColor}" FontWeight="SemiBold" FontSize="12" />
-                                                    <TextBlock Text="{Binding Text}" Foreground="#1E2933" TextWrapping="Wrap" FontSize="14" />
-                                                </StackPanel>
-                                            </Border>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Border>
+        <Style Selector="TextBox.InterviewAnswer:focus /template/ Border#PART_BorderElement, TextBox.InterviewAnswer:focus-within /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="#FFFFFF" />
+            <Setter Property="BorderBrush" Value="#2563EB" />
+        </Style>
 
-                    <TextBox Grid.Row="1"
-                             Text="{Binding TranscriptInput, Mode=TwoWay}"
-                             AcceptsReturn="True"
-                             Height="120"
-                             TextWrapping="Wrap"
-                             Background="#FFFFFF"
-                             BorderBrush="#C9D3DD"
-                             BorderThickness="1"
-                             CornerRadius="8"
-                             PlaceholderText="Type answer here or use mic transcription..." />
+        <Style Selector="Button.CompactAction">
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="MinHeight" Value="30" />
+        </Style>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8">
-                        <Button Content="Start Recording" Command="{Binding StartRecordingCommand}" Background="#DCEBFF" Foreground="#214E7A" BorderBrush="#AEC8E5" />
-                        <Button Content="Stop + Transcribe" Command="{Binding StopRecordingAndTranscribeCommand}" Background="#E4F8F3" Foreground="#146C5A" BorderBrush="#A9D8CF" />
-                        <Button Content="Submit Answer" Classes="Primary" Command="{Binding SubmitAnswerCommand}" />
-                    </StackPanel>
+        <Style Selector="Button.ProgressTrackButton">
+            <Setter Property="MinWidth" Value="146" />
+            <Setter Property="Height" Value="58" />
+            <Setter Property="Padding" Value="12,6" />
+        </Style>
+    </UserControl.Styles>
 
-                    <Border Grid.Row="3" Background="#F1F5F8" BorderBrush="#D3DCE5" BorderThickness="1" CornerRadius="8" Padding="8">
-                        <TextBlock Text="{Binding RecordingStatus}" Foreground="#4D6069" FontSize="12" />
-                    </Border>
+    <Grid Background="{DynamicResource LightShellBg}">
+        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Margin="12" ClipToBounds="True">
+            <Border Background="#FFFFFF"
+                    BorderBrush="#CFE0EA"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="14,8">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="12">
+                    <Border Width="5"
+                            Background="#2563EB"
+                            CornerRadius="4"
+                            VerticalAlignment="Stretch" />
 
-                    <Border Grid.Row="4" Background="#FFFFFF" BorderBrush="#C9D3DD" BorderThickness="1" CornerRadius="8" Padding="8">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Live Captions" Foreground="#3F5662" FontWeight="SemiBold" FontSize="12" />
-                            <TextBlock Text="{Binding LiveCaption}" Foreground="#1F3A47" TextWrapping="Wrap" />
-                            <Border Background="#F4F7FA" BorderBrush="#D6DFE8" BorderThickness="1" CornerRadius="6" Padding="6" Height="110">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Text="{Binding LiveTranscriptLog}" Foreground="#3E5662" TextWrapping="Wrap" FontSize="12" />
-                                </ScrollViewer>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Live Interview Desk"
+                                   Foreground="#102331"
+                                   FontWeight="Bold"
+                                   FontSize="24" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding JobRole}"
+                                       Foreground="#475569"
+                                       FontSize="14" />
+                            <TextBlock Text="-"
+                                       Foreground="#94A3B8"
+                                       FontSize="14" />
+                            <TextBlock Text="{Binding InterviewCategory}"
+                                       Foreground="#0F766E"
+                                       FontSize="14"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="6"
+                                    VerticalAlignment="Center">
+                            <Border Background="#EFF6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="8,3">
+                                <TextBlock Text="Device Check"
+                                           Foreground="#1D4ED8"
+                                           FontSize="11"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                            <TextBlock Text=">"
+                                       Foreground="#94A3B8"
+                                       FontSize="12"
+                                       VerticalAlignment="Center" />
+                            <Border Background="#EFF6FF"
+                                    BorderBrush="#BFDBFE"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="8,3">
+                                <TextBlock Text="Rules"
+                                           Foreground="#1D4ED8"
+                                           FontSize="11"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                            <TextBlock Text=">"
+                                       Foreground="#94A3B8"
+                                       FontSize="12"
+                                       VerticalAlignment="Center" />
+                            <Border Background="#DBEAFE"
+                                    BorderBrush="#93C5FD"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="8,3">
+                                <TextBlock Text="Interview"
+                                           Foreground="#1E40AF"
+                                           FontSize="11"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                            <TextBlock Text=">"
+                                       Foreground="#94A3B8"
+                                       FontSize="12"
+                                       VerticalAlignment="Center" />
+                            <Border Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="8,3">
+                                <TextBlock Text="Submitted"
+                                           Foreground="#64748B"
+                                           FontSize="11"
+                                           FontWeight="SemiBold" />
                             </Border>
                         </StackPanel>
+                    </StackPanel>
+
+                    <Border Grid.Column="2"
+                            Background="#F8FAFC"
+                            BorderBrush="#D6E1EA"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12,8"
+                            MinWidth="96"
+                            Height="58">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Question"
+                                       Foreground="#64748B"
+                                       FontSize="12"
+                                       HorizontalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Spacing="4">
+                                <TextBlock Text="{Binding QuestionNumber}"
+                                           Foreground="#0F172A"
+                                           FontSize="22"
+                                           FontWeight="Bold" />
+                                <TextBlock Text="/"
+                                           Foreground="#94A3B8"
+                                           FontSize="16"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding TotalQuestions}"
+                                           Foreground="#64748B"
+                                           FontSize="16"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
                     </Border>
+
+                    <Border Grid.Column="3"
+                            Background="#F8FAFC"
+                            BorderBrush="#D6E1EA"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12,8"
+                            MinWidth="116"
+                            Height="58">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="Progress"
+                                       Foreground="#64748B"
+                                       FontSize="12"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding ProgressSummary}"
+                                       Foreground="#155E75"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Grid.Column="4"
+                            x:Name="TrackProgressButton"
+                             Classes="LightNeutral ProgressTrackButton"
+                             Command="{Binding ToggleTimelineCommand}"
+                             HorizontalContentAlignment="Center"
+                             VerticalContentAlignment="Center">
+                        <StackPanel HorizontalAlignment="Center" Spacing="3">
+                            <TextBlock Text="Track Progress"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding ProgressSummary}"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                       FontSize="13"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
                 </Grid>
             </Border>
 
-            <Grid Grid.Column="1" RowDefinitions="*,*" RowSpacing="12">
-                <Border Grid.Row="0" Background="#F8F9FB" BorderBrush="#CDD5DF" BorderThickness="1" CornerRadius="10" Padding="10">
-                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                        <TextBlock Text="User Camera Feed" Foreground="#21353E" FontWeight="SemiBold" FontSize="14" />
-                        <Border Grid.Row="1" Background="#0E1720" BorderBrush="#C9D3DD" BorderThickness="1" CornerRadius="8">
-                            <Image Source="{Binding CameraFrame}" Stretch="UniformToFill" />
-                        </Border>
-                    </Grid>
-                </Border>
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="*,400"
+                  ColumnSpacing="10"
+                  ClipToBounds="True">
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8">
+                    <Border Background="#FFFFFF"
+                            BorderBrush="#BED7F5"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="12,12"
+                            MinHeight="132"
+                            ClipToBounds="True">
+                        <Grid RowDefinitions="Auto,Auto,Auto"
+                              ColumnDefinitions="Auto,*,Auto"
+                             RowSpacing="9"
+                             ColumnSpacing="12">
+                            <Border Grid.RowSpan="3"
+                                    Width="4"
+                                    Background="#2563EB"
+                                    CornerRadius="3" />
 
-                <Border Grid.Row="1" Background="#F8F9FB" BorderBrush="#CDD5DF" BorderThickness="1" CornerRadius="10" Padding="10">
-                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                        <TextBlock Text="Interviewer Avatar" Foreground="#21353E" FontWeight="SemiBold" FontSize="14" />
-                        <Border Grid.Row="1" Background="#2A2E35" CornerRadius="8" BorderBrush="#3E4653" BorderThickness="1">
-                            <Grid>
-                                <Border Width="110" Height="110" CornerRadius="55" Background="#5FC8A7" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <Ellipse Width="66" Height="66" Fill="#F8E8D7" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-12,0,0" />
-                                <Ellipse Width="18" Height="18" Fill="#1F2937" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="-14,-14,0,0" />
-                                <Ellipse Width="18" Height="18" Fill="#1F2937" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="14,-14,0,0" />
-                                <Border Width="64" Height="28" CornerRadius="14" Background="#4F5D74" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,46,0,0" />
+                            <StackPanel Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        Spacing="8"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="{Binding QuestionMeta}"
+                                           Foreground="#334155"
+                                           FontSize="12"
+                                           FontWeight="SemiBold" />
+                                <Border Background="#ECFDF5"
+                                        BorderBrush="#BBF7D0"
+                                        BorderThickness="1"
+                                        CornerRadius="999"
+                                        Padding="10,4">
+                                    <TextBlock Text="{Binding QuestionTopic}"
+                                               Foreground="#047857"
+                                               FontSize="13"
+                                               FontWeight="SemiBold" />
+                                </Border>
+                            </StackPanel>
+
+                            <Border Grid.Column="2"
+                                    Background="#E0F2FE"
+                                    BorderBrush="#BAE6FD"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="12,5"
+                                    VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="5">
+                                    <TextBlock Text="Stage"
+                                               Foreground="#0369A1"
+                                               FontSize="11"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding InterviewStage}"
+                                               Foreground="#075985"
+                                               FontSize="12"
+                                               FontWeight="Bold" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="{Binding QuestionPrompt}"
+                                       Grid.Row="1"
+                                       Grid.Column="1"
+                                       Grid.ColumnSpan="2"
+                                       Foreground="#0F172A"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis"
+                                       LineHeight="22" />
+
+                            <StackPanel Grid.Row="2"
+                                         Grid.Column="1"
+                                         Grid.ColumnSpan="2"
+                                         Spacing="3"
+                                         MinHeight="44"
+                                         Margin="0,2,0,0">
+                                <TextBlock Text="{Binding InterviewerStatus}"
+                                           Foreground="#0F766E"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           TextWrapping="Wrap"
+                                           MaxLines="1"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding PrimaryActionHint}"
+                                           Foreground="#64748B"
+                                           FontSize="13"
+                                            TextWrapping="Wrap"
+                                            MaxLines="2"
+                                            TextTrimming="CharacterEllipsis"
+                                            LineHeight="18" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Background="#FFFFFF"
+                            BorderBrush="#D2E0EA"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10"
+                            Margin="0"
+                            MinHeight="96">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="6">
+                            <TextBlock Text="Conversation"
+                                       Foreground="#334155"
+                                       FontSize="13"
+                                       FontWeight="SemiBold" />
+                            <ScrollViewer x:Name="ConversationScrollViewer"
+                                          Grid.Row="1"
+                                          VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding ChatMessages}"
+                                              Margin="0,2,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,3,0,7">
+                                                <Border MaxWidth="640"
+                                                        Padding="12,9"
+                                                        CornerRadius="8"
+                                                        HorizontalAlignment="{Binding BubbleAlignment}"
+                                                        Background="{Binding BubbleBackground}"
+                                                        BorderBrush="{Binding BubbleBorder}"
+                                                        BorderThickness="1">
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock Text="{Binding Sender}"
+                                                                   Foreground="{Binding SenderColor}"
+                                                                   FontWeight="SemiBold"
+                                                                   FontSize="12" />
+                                                        <TextBlock Text="{Binding Text}"
+                                                                   Foreground="#1F2937"
+                                                                   TextWrapping="Wrap"
+                                                                   FontSize="14" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2"
+                            Background="#FFFFFF"
+                            BorderBrush="#D9E5EF"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10">
+                        <Grid RowDefinitions="Auto,*" RowSpacing="6">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Your Answer"
+                                           Foreground="#334155"
+                                           FontSize="13"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1"
+                                           Text="Edit before submitting"
+                                           Foreground="#64748B"
+                                           FontSize="12" />
                             </Grid>
-                        </Border>
-                    </Grid>
-                </Border>
+                            <TextBox Grid.Row="1"
+                                      Classes="InterviewAnswer"
+                                      Text="{Binding TranscriptInput, Mode=TwoWay}"
+                                      AcceptsReturn="True"
+                                      Height="82"
+                                      TextWrapping="Wrap"
+                                      PlaceholderText="Type your answer here or use mic transcription..." />
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="3"
+                            Background="#FFFFFF"
+                            BorderBrush="#CFE7DD"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10">
+                        <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="5">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Transcript Preview"
+                                           Foreground="#334155"
+                                           FontSize="13"
+                                           FontWeight="SemiBold" />
+                                <Border Grid.Column="1"
+                                        Background="#F8FAFC"
+                                        BorderBrush="#DDE7F0"
+                                        BorderThickness="1"
+                                        CornerRadius="999"
+                                        Padding="9,3"
+                                        MaxWidth="320">
+                                    <TextBlock Text="{Binding RecordingStatus}"
+                                               Foreground="#475569"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis" />
+                                </Border>
+                            </Grid>
+                             <TextBlock Grid.Row="1"
+                                         Text="{Binding LiveCaption}"
+                                         Foreground="#1E3A4A"
+                                         TextWrapping="Wrap"
+                                         MaxLines="2"
+                                         TextTrimming="CharacterEllipsis"
+                                         MaxHeight="36" />
+                            <Border Grid.Row="2"
+                                    Background="#F8FAFC"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="999"
+                                    Padding="8,4"
+                                    HorizontalAlignment="Left">
+                                <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="8">
+                                    <TextBlock Text="Mic level"
+                                               Foreground="#64748B"
+                                               FontSize="12"
+                                               VerticalAlignment="Center" />
+                                    <ProgressBar Grid.Column="1"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Value="{Binding MicInputLevel}"
+                                                 Height="7"
+                                                 Width="150"
+                                                 HorizontalAlignment="Left"
+                                                 Foreground="#22C55E"
+                                                 Background="#E2E8F0"
+                                                 VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Column="1" RowDefinitions="Auto,*" RowSpacing="10" ClipToBounds="True">
+                    <Border Background="#F8FAFC"
+                            BorderBrush="#CFE0EA"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10">
+                        <Grid RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                <TextBlock Text="Camera"
+                                           Foreground="#334155"
+                                           FontSize="13"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding CameraStatus}"
+                                           Foreground="#0F766E"
+                                           FontSize="12"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center" />
+                                <Button Grid.Column="2"
+                                        Classes="LightNeutral CompactAction"
+                                        Content="Restart"
+                                        Command="{Binding RestartCameraCommand}"
+                                        MinWidth="72"
+                                        Height="30" />
+                            </Grid>
+                            <Border Grid.Row="1"
+                                    Background="#0F172A"
+                                    BorderBrush="#CBD5E1"
+                                     BorderThickness="1"
+                                     CornerRadius="10"
+                                     Height="196"
+                                     ClipToBounds="True">
+                                <Grid>
+                                    <StackPanel HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Spacing="4">
+                                        <TextBlock Text="Camera preview"
+                                                   Foreground="#CBD5E1"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" />
+                                        <TextBlock Text="{Binding CameraStatus}"
+                                                   Foreground="#94A3B8"
+                                                   FontSize="12"
+                                                   TextWrapping="Wrap"
+                                                   MaxWidth="260"
+                                                   HorizontalAlignment="Center"
+                                                   TextAlignment="Center" />
+                                    </StackPanel>
+                                    <Image Source="{Binding CameraFrame}" Stretch="UniformToFill" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1"
+                            Background="#FBFCFE"
+                            BorderBrush="#CFE0EA"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10,10,10,12"
+                            ClipToBounds="True">
+                        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Session Status"
+                                           Foreground="#334155"
+                                           FontSize="13"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding ProgressSummary}"
+                                           Foreground="#64748B"
+                                           FontSize="12"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                            <ProgressBar Grid.Row="1"
+                                         Minimum="0"
+                                         Maximum="100"
+                                         Value="{Binding InterviewProgressPercent}"
+                                         Height="6"
+                                         Foreground="#14B8A6"
+                                         Background="#E2E8F0" />
+                            <ScrollViewer Grid.Row="2"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Spacing="7">
+                                <Border Background="#EFF6FF"
+                                        BorderBrush="#BFDBFE"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="8">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="Interviewer"
+                                                   Foreground="#1D4ED8"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding InterviewerStatus}"
+                                                   Foreground="#1E3A8A"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   MaxLines="1"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding PrimaryActionHint}"
+                                                   Foreground="#475569"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="12"
+                                                   MaxLines="2"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FFFFFF"
+                                        BorderBrush="#D9E5EF"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="8">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="Feedback"
+                                                   Foreground="#64748B"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Feedback}"
+                                                   Foreground="#1F2937"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="13"
+                                                   MaxLines="2"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC"
+                                        BorderBrush="#DDE7F0"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="8">
+                                    <StackPanel Spacing="3">
+                                        <TextBlock Text="System"
+                                                   Foreground="#64748B"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding StatusMessage}"
+                                                   Foreground="#1F2937"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="13"
+                                                   MaxLines="2"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                </Grid>
             </Grid>
+            <Border Grid.Row="2"
+                    Background="#FFFFFF"
+                    BorderBrush="#CBD5E1"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="10">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <WrapPanel Orientation="Horizontal"
+                               VerticalAlignment="Center"
+                               ItemSpacing="10"
+                               LineSpacing="8">
+                        <Button Content="Start Recording"
+                                Classes="LightPrimary"
+                                Command="{Binding StartRecordingCommand}"
+                                Height="38"
+                                MinWidth="124" />
+                        <Button Classes="LightNeutral"
+                                Content="Stop Recording"
+                                Command="{Binding StopRecordingAndTranscribeCommand}"
+                                Height="38"
+                                MinWidth="138" />
+                        <Button Classes="LightNeutral"
+                                Content="Transcribe Again"
+                                Command="{Binding RetryTranscriptionCommand}"
+                                Height="38"
+                                MinWidth="128" />
+                    </WrapPanel>
+
+                    <Grid Grid.Column="1"
+                          ColumnDefinitions="Auto,*"
+                          ColumnSpacing="12"
+                          VerticalAlignment="Center">
+                        <ProgressBar Minimum="0"
+                                     Maximum="100"
+                                     IsIndeterminate="True"
+                                     IsVisible="{Binding IsBusy}"
+                                     Width="110"
+                                     Height="6"
+                                     Foreground="#2563EB"
+                                     Background="#E2E8F0"
+                                     VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding RecordingStatus}"
+                                   Grid.Column="1"
+                                   Foreground="#475569"
+                                   FontSize="13"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="360"
+                                   MaxHeight="36" />
+                    </Grid>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                Spacing="10"
+                                VerticalAlignment="Center">
+                        <Button Content="Submit Answer"
+                                Classes="LightPrimary"
+                                Command="{Binding SubmitAnswerCommand}"
+                                Height="38"
+                                MinWidth="132" />
+                        <Button Content="Submit Interview"
+                                Classes="LightNeutral"
+                                Command="{Binding FinishNowCommand}"
+                                Height="38"
+                                MinWidth="128" />
+                        <Button Content="Logout"
+                                Classes="LightDanger"
+                                Command="{Binding LogoutCommand}"
+                                Height="38"
+                                MinWidth="92" />
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-            <Border>
-                <StackPanel>
-                    <TextBlock Text="{Binding Feedback}" Foreground="#314651" FontSize="12" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="#425C68" FontSize="12" TextWrapping="Wrap" />
+        <Border Background="#01000000"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                IsVisible="{Binding IsTimelineOpen}"
+                PointerPressed="OnTimelineLightDismissPointerPressed" />
+
+        <Border Width="398"
+                MaxHeight="408"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,92,18,0"
+                Background="#FFFFFF"
+                BorderBrush="#93C5FD"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="14"
+                BoxShadow="0 18 44 0 #330F172A"
+                IsVisible="{Binding IsTimelineOpen}"
+                PointerPressed="OnTimelinePopupPointerPressed">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Track Progress"
+                                   Foreground="#0F172A"
+                                   FontSize="16"
+                                   FontWeight="Bold" />
+                        <TextBlock Text="{Binding ProgressSummary}"
+                                   Foreground="#64748B"
+                                   FontSize="12" />
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Classes="LightNeutral CompactAction"
+                            Content="Close"
+                            Command="{Binding CloseTimelineCommand}"
+                            MinWidth="68"
+                            Height="30" />
+                </Grid>
+
+                <ScrollViewer Grid.Row="1"
+                              MaxHeight="350"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding TimelineItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*"
+                                      ColumnSpacing="9"
+                                      Margin="0,0,0,9">
+                                    <Border Width="28"
+                                            Height="28"
+                                            CornerRadius="14"
+                                            Background="{Binding AccentBrush}"
+                                            VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding Number}"
+                                                   Foreground="#FFFFFF"
+                                                   FontSize="12"
+                                                   FontWeight="Bold"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border Grid.Column="1"
+                                            Background="#F8FAFC"
+                                            BorderBrush="#E2E8F0"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="9">
+                                        <StackPanel Spacing="5">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                <TextBlock Text="{Binding Topic}"
+                                                           Foreground="#475569"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <Border Grid.Column="1"
+                                                        Background="{Binding BadgeBackground}"
+                                                        BorderBrush="{Binding AccentBrush}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="999"
+                                                        Padding="8,2">
+                                                    <TextBlock Text="{Binding Status}"
+                                                               Foreground="{Binding BadgeForeground}"
+                                                               FontSize="10"
+                                                               FontWeight="SemiBold" />
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Title}"
+                                                       Foreground="#0F172A"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       TextWrapping="Wrap"
+                                                       MaxLines="2"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Subtitle}"
+                                                       Foreground="#64748B"
+                                                       FontSize="11"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <Button Content="Re-answer"
+                                                    Classes="LightNeutral CompactAction"
+                                                    Command="{Binding DataContext.ReviewTimelineQuestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    IsVisible="{Binding CanReanswer}"
+                                                    HorizontalAlignment="Right"
+                                                    MinWidth="82"
+                                                    Height="28" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Border Background="#99000000"
+                IsVisible="{Binding IsSubmitConfirmationVisible}">
+            <Border Width="520"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Background="#FFFFFF"
+                    BorderBrush="#CBD5E1"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="22">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="Submit interview now?"
+                               Foreground="#0F172A"
+                               FontSize="22"
+                               FontWeight="Bold" />
+                    <TextBlock Text="{Binding SubmitConfirmationMessage}"
+                               Foreground="#475569"
+                               FontSize="14"
+                               TextWrapping="Wrap" />
+                    <Border Background="#EFF6FF"
+                            BorderBrush="#BFDBFE"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10">
+                        <TextBlock Text="Your submitted answers will be saved for admin review. Detailed evaluation remains hidden from the candidate screen."
+                                   Foreground="#1E3A8A"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Spacing="10">
+                        <Button Content="Continue Interview"
+                                Classes="LightNeutral"
+                                Command="{Binding CancelSubmitInterviewCommand}"
+                                MinWidth="150" />
+                        <Button Content="Submit Interview"
+                                Classes="LightPrimary"
+                                Command="{Binding ConfirmSubmitInterviewCommand}"
+                                MinWidth="150" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
-            <Button Grid.Column="1" Content="Finish Interview" Command="{Binding FinishNowCommand}" />
-            <Button Grid.Column="2" Content="Logout" Classes="Danger" Command="{Binding LogoutCommand}" />
-        </Grid>
-        </Grid>
+        </Border>
     </Grid>
 </UserControl>

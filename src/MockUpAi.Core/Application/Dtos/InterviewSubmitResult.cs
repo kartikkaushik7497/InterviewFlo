@@ -13,4 +13,6 @@ public sealed class InterviewSubmitResult
     public double RunningScore { get; init; }
 
     public string EncouragementMessage { get; init; } = string.Empty;
+
+    public bool IsAdaptiveFollowUp { get; init; }
 }

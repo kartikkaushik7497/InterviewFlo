@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace MockUpAi.Infrastructure.Persistence;
 
-internal sealed class MongoUserRepository : IUserRepository
+internal sealed class MongoUserRepository : IUserRepository, IStorageIndexInitializer
 {
     private readonly IMongoCollection<AppUser> _users;
     private readonly ILogger<MongoUserRepository> _logger;
@@ -113,6 +113,39 @@ internal sealed class MongoUserRepository : IUserRepository
             cancellationToken);
 
         return users;
+    }
+
+    public async Task EnsureIndexesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var models = new[]
+            {
+                new CreateIndexModel<AppUser>(
+                    Builders<AppUser>.IndexKeys.Ascending(x => x.UserId),
+                    new CreateIndexOptions { Name = "ux_users_userid", Unique = true }),
+                new CreateIndexModel<AppUser>(
+                    Builders<AppUser>.IndexKeys
+                        .Ascending(x => x.ActorType)
+                        .Descending(x => x.CreatedAtUtc),
+                    new CreateIndexOptions { Name = "ix_users_actor_created" }),
+                new CreateIndexModel<AppUser>(
+                    Builders<AppUser>.IndexKeys
+                        .Ascending(x => x.IsActive)
+                        .Ascending(x => x.ExpiresAtUtc),
+                    new CreateIndexOptions { Name = "ix_users_lifecycle" }),
+            };
+
+            await MongoRepositoryExecutor.ExecuteWithRetryAsync(
+                () => _users.Indexes.CreateManyAsync(models, cancellationToken),
+                _logger,
+                "EnsureUserIndexes",
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Mongo user index initialization failed. The app will continue without rebuilding indexes.");
+        }
     }
 
     private static string NormalizeUserId(string userId)

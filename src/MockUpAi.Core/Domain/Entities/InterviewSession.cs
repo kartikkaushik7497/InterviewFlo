@@ -18,7 +18,7 @@ public sealed class InterviewSession
 
     public double PassingScore { get; set; } = 60;
 
-    public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.OpenAi;
+    public InterviewAiProvider AiProvider { get; set; } = InterviewAiProvider.Heuristic;
 
     public DateTime StartedAtUtc { get; set; } = DateTime.UtcNow;
 
@@ -32,7 +32,7 @@ public sealed class InterviewSession
 
     public List<InterviewConversationTurn> ConversationTurns { get; set; } = [];
 
-    public int PlannedQuestionCount { get; set; } = 5;
+    public int PlannedQuestionCount { get; set; } = 12;
 
     public double OverallScore { get; set; }
 

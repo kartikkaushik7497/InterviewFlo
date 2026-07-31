@@ -32,6 +32,51 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
         </Style>
+
+        <Style Selector="Button.LoginCta">
+            <Setter Property="Background" Value="#F97316" />
+            <Setter Property="BorderBrush" Value="#FB923C" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="26" />
+            <Setter Property="Padding" Value="10,8,18,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FocusAdorner" Value="{x:Null}" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="Button.LoginCta:pointerover">
+            <Setter Property="Background" Value="#FB923C" />
+            <Setter Property="BorderBrush" Value="#FED7AA" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.LoginCta:pressed">
+            <Setter Property="Background" Value="#EA580C" />
+            <Setter Property="BorderBrush" Value="#FDBA74" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+
+        <Style Selector="Button.LoginCta:disabled">
+            <Setter Property="Background" Value="#F97316" />
+            <Setter Property="BorderBrush" Value="#FB923C" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto"
@@ -96,8 +141,8 @@
                        FontSize="13" />
         </Grid>
 
-        <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="760">
-            <StackPanel HorizontalAlignment="Center" Spacing="14">
+        <Grid Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="680">
+            <StackPanel HorizontalAlignment="Center" Spacing="12">
                 <Border HorizontalAlignment="Center"
                         BorderBrush="#50FFFFFF"
                         BorderThickness="1"
@@ -110,10 +155,10 @@
                                FontSize="13" />
                 </Border>
 
-                <TextBlock Text="Welcome"
+                <TextBlock Text="Welcome Back"
                            HorizontalAlignment="Center"
                            Foreground="#F9FAFB"
-                           FontSize="78"
+                           FontSize="62"
                            FontWeight="Bold" />
 
                 <TextBlock Text="Continue your interview workflow"
@@ -121,9 +166,9 @@
                            Foreground="#8B93A3"
                            FontSize="14" />
 
-                <StackPanel Width="560" Spacing="12" Margin="0,8,0,0">
-                    <Border Height="58"
-                            CornerRadius="29"
+                <StackPanel Width="520" Spacing="12" Margin="0,8,0,0">
+                    <Border Height="54"
+                            CornerRadius="27"
                             Background="#2D2D2D"
                             BorderBrush="#3B3F46"
                             BorderThickness="1"
@@ -143,8 +188,8 @@
                         </Grid>
                     </Border>
 
-                    <Border Height="58"
-                            CornerRadius="29"
+                    <Border Height="54"
+                            CornerRadius="27"
                             Background="#2D2D2D"
                             BorderBrush="#3B3F46"
                             BorderThickness="1"
@@ -164,6 +209,7 @@
                                      PasswordChar="*"
                                      PlaceholderText="Password" />
                             <Button Grid.Column="2"
+                                    Classes="IconButton"
                                     Command="{Binding ToggleRevealPasswordCommand}"
                                     Background="Transparent"
                                     BorderBrush="Transparent"
@@ -188,23 +234,21 @@
                         </Grid>
                     </Border>
 
-                    <Button Width="154"
+                    <Button Width="170"
+                            Height="52"
                             Margin="0,8,0,0"
                             HorizontalAlignment="Center"
+                            Classes="LoginCta"
                             Command="{Binding LoginCommand}"
                             IsDefault="True"
-                            Background="#F97316"
-                            BorderBrush="#FB923C"
-                            BorderThickness="1"
-                            CornerRadius="24"
-                            Padding="8,8,16,8"
-                            FocusAdorner="{x:Null}">
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <Border Width="32" Height="32" CornerRadius="16" Background="#FAFAFA22">
-                                <TextBlock Text=">" Foreground="White" FontWeight="Bold" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border Width="32" Height="32" CornerRadius="16" Background="#FFF7ED">
+                                <TextBlock Text=">" Foreground="#F97316" FontWeight="Bold" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                             <TextBlock Text="Login"
-                                       Foreground="#F8FAFC"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                        FontSize="18"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center" />

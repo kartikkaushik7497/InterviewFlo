@@ -1,102 +1,105 @@
-﻿# MockUpAi
+# InterviewFlo
 
-MockUpAi is a cross-platform desktop AI interview platform built with:
+InterviewFlo is a Windows desktop AI interview platform built with:
 - .NET 10
 - Avalonia UI
-- MongoDB Atlas (with resilient fallback)
-- OpenAI interview + transcription integration
+- MongoDB Atlas with in-memory fallback
+- Local Whisper transcription with Windows speech fallback
+- Optional OpenAI, Gemini, Azure Speech, and ElevenLabs integrations
+
+The source code still uses the legacy `MockUpAi` namespace and project folder names, but the product/demo branding is InterviewFlo.
 
 ## Implemented Product Features
 
-### 1. Dual actor architecture
-- **Admin** and **Candidate** have separate flows and separate UI.
+### Dual actor architecture
+- Admin and candidate flows with separate screens and navigation.
 
-### 2. Candidate interview flow
+### Candidate interview flow
 - Login with admin-generated credentials.
-- Mandatory password reset flow (when flagged).
-- Real permission checks for:
-  - microphone device access
-  - camera device access
-  - transcription key readiness
-- Rules page and timed lobby.
-- Live interview with:
-  - role-based AI question generation
-  - real microphone recording
-  - speech-to-text transcription via OpenAI
-  - live camera preview
-  - per-question AI scoring
-- Final interview result card with score + verdict.
+- Mandatory first-login password reset when enabled.
+- Camera and microphone device selection before interview start.
+- Rules page, lobby, live camera preview, answer recording, transcription preview, retry, and editable final answer.
+- Per-question scoring and final result view.
 
-### 3. Admin control center
-- Create candidate credentials with role + job description.
-- Candidate lifecycle management:
-  - activate/deactivate
-  - expire account by date
-  - reset candidate password
-  - delete candidate
-  - edit role and description
-- Dashboard with search/filter/sort and selected candidate actions.
-- Export reports:
-  - CSV
-  - PDF
-- Security tools:
-  - admin password rotation
-  - secure OpenAI API key save in encrypted local vault.
+### Admin control center
+- Create, edit, activate, deactivate, expire, reset, and delete candidates.
+- Configure role, description, category, difficulty, passing score, AI provider, and interviewer voice per candidate.
+- Search, filter, sort, CSV export, PDF export, and security overview tools.
+- Optional encrypted local vault for paid provider keys.
 
-### 4. AI scoring quality
-- OpenAI rubric-driven evaluation with weighted dimensions:
-  - technical correctness
-  - role relevance
-  - depth/reasoning
-  - communication clarity
-- Role-fit score calculation from full interview evidence.
-- Automatic heuristic fallback if OpenAI is unavailable.
+### AI and voice behavior
+- Heuristic interview generation, follow-up logic, scoring, and feedback work without paid keys.
+- Local Whisper is the default transcription engine when no paid speech provider is configured.
+- Windows speech recognition is kept as a fallback.
+- OpenAI, Gemini, Azure Speech, and ElevenLabs can be enabled locally when keys are available.
 
-### 5. Security and resilience
-- Password policy enforcement (length + upper/lower/digit/special).
-- Candidate first-login password reset enforcement.
-- Encrypted key vault storage for OpenAI API keys.
-- Mongo retry strategy for transient faults.
-- Mongo health probe on startup with in-memory fallback if unreachable.
-- App telemetry logging with global exception capture.
+### Security and resilience
+- Password policy enforcement.
+- Candidate password reset enforcement.
+- MongoDB startup health probe with temporary in-memory fallback.
+- Global telemetry hooks for unhandled exceptions.
+- Local secret overrides through `appsettings.Local.json` or environment variables.
 
 ## Project Structure
 
-- `src/MockUpAi.App` -> Avalonia UI, navigation, media capture, telemetry
-- `src/MockUpAi.Core` -> domain models, DTOs, contracts
-- `src/MockUpAi.Infrastructure` -> Mongo persistence, AI services, security, exports
+- `src/MockUpAi.App` -> Avalonia UI, view models, navigation, camera/mic capture, local transcription, voice playback, telemetry.
+- `src/MockUpAi.Core` -> domain entities, DTOs, enums, service contracts.
+- `src/MockUpAi.Infrastructure` -> Mongo persistence, authentication, admin services, AI routing, reports, external API clients.
 
 ## Configuration
 
-Edit `src/MockUpAi.App/appsettings.json`:
+Keep checked-in `appsettings.json` safe for source control. Put real local secrets in `src/MockUpAi.App/appsettings.Local.json`, using `appsettings.Local.example.json` as a template.
 
+Useful settings:
 - `MongoDb:ConnectionString`
 - `MongoDb:DatabaseName`
-- `OpenAi:ApiKey` (optional)
-- `OpenAi:Model`
-- `OpenAi:TranscriptionModel`
 - `SeedAdmin:UserId`
 - `SeedAdmin:Password`
+- `WhisperLocal:Enabled`
+- `WhisperLocal:Model`
+- `OpenAi:Enabled`
+- `OpenAi:ApiKey`
+- `Gemini:Enabled`
+- `Gemini:ApiKey`
+- `AzureSpeech:Enabled`
+- `AzureSpeech:ApiKey`
+- `AzureSpeech:Region`
 
-You can also set:
-- `OPENAI_API_KEY` environment variable
-- `MOCKUPAI_MASTER_SECRET` environment variable (for stronger local vault encryption key derivation)
+Environment variables are also supported:
+- `MongoDb__ConnectionString`
+- `OPENAI_API_KEY`
+- `AZURE_SPEECH_KEY`
+- `MOCKUPAI_MASTER_SECRET`
+- `MOCKUPAI_SEED_ADMIN_PASSWORD`
 
 ## Run
 
 ```powershell
 cd C:\Users\karti\OneDrive\Desktop\mock
 dotnet restore
+dotnet test
 dotnet run --project src\MockUpAi.App\MockUpAi.App.csproj
 ```
+
+## Windows Publish
+
+Create a self-contained Windows build:
+
+```powershell
+.\eng\publish-windows.ps1
+```
+
+The packaged output is written to `artifacts\InterviewFlo-win-x64`. Keep `appsettings.Local.json` on the target machine for real MongoDB and provider secrets.
 
 ## Default Admin
 
 - User ID: `admin`
-- Password: configure `SeedAdmin:Password` locally or set `MOCKUPAI_SEED_ADMIN_PASSWORD`
+- Password: set `SeedAdmin:Password` in `appsettings.Local.json` or set `MOCKUPAI_SEED_ADMIN_PASSWORD`.
 
 ## Notes
 
-- If MongoDB is not configured or unreachable, the app runs with in-memory repositories.
-- If OpenAI key is unavailable, interview generation/evaluation falls back to heuristic mode.
-- Speech transcription requires an available OpenAI key.
+- If MongoDB is not configured or unreachable, the app runs with temporary in-memory storage.
+- For persistent users/interviews, configure MongoDB locally.
+- The default setup does not require paid OpenAI transcription.
+- The first Whisper run can take longer because the selected local model may need to download.
+- Run `dotnet list .\MockUpAi.sln package --vulnerable --include-transitive` before final demo packaging.

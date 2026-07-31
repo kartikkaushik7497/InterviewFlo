@@ -36,6 +36,20 @@ Difficulty level: {{difficulty}}.
 Job description:
 {{jobDescription}}
 
+Rules:
+- Build a structured interview plan, not random theory questions.
+- Ask exactly one intro question first.
+- If category is Technical, every question after the intro should be direct and practical: project walkthrough, coding, OOP/design, API, database, security, debugging, testing, and final fit.
+- If category is Behavioral, HR, or Management, adapt the sections to that category instead of forcing technical questions.
+- Vary the wording and topics for each generated interview so the same role does not always receive the exact same list.
+- Avoid vague standalone prompts like "discuss a tradeoff" unless tied to a concrete project or system design scenario.
+- Do not ask abstract random theory; every question should sound like a real interviewer would ask it.
+- Include these sections when category is Technical: career/education, project, coding, OOP/design, role-specific practical topics, testing/debugging, final fit.
+- Keep coding/OOP/API/database questions short and direct.
+- Career or project questions may request a medium-long answer and should say that in the prompt.
+- Every idealAnswerHint must start with: Section:<section>; Expected:<short|medium|long>;
+- Match questions to the role and job description.
+
 Return strict JSON array only:
 [
   {
@@ -85,7 +99,7 @@ Candidate: {{candidateName}}
 Role: {{jobRole}}
 Category: {{category}}
 Difficulty: {{difficulty}}
-One sentence, under 55 words.
+One sentence, under 24 words. Do not include a paragraph, bullet list, or line break.
 """;
 
         try

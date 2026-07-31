@@ -19,8 +19,9 @@ public sealed partial class AdminCandidateRowViewModel : ObservableObject
 
     public double PassingScore { get; init; } = 60;
 
-    public string AiProvider { get; init; } = "OpenAi";
-    public string InterviewerVoiceProfile { get; init; } = "OpenAI:Nova";
+    public string AiProvider { get; init; } = "Heuristic";
+
+    public string InterviewerVoiceProfile { get; init; } = "Windows:Natural";
 
     public string InterviewStatus { get; init; } = string.Empty;
 

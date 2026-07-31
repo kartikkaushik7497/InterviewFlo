@@ -1,11 +1,13 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Media;
 using MockUpAi.App.ViewModels;
+using MockUpAi.App.ViewModels.Admin;
+using MockUpAi.App.ViewModels.Auth;
 using MockUpAi.App.ViewModels.Candidate;
+using MockUpAi.App.Views.Admin;
+using MockUpAi.App.Views.Auth;
 using MockUpAi.App.Views.Candidate;
 
 namespace MockUpAi.App;
@@ -13,9 +15,6 @@ namespace MockUpAi.App;
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.
 /// </summary>
-[RequiresUnreferencedCode(
-    "Default implementation of ViewLocator involves reflection which may be trimmed away.",
-    Url = "https://docs.avaloniaui.net/docs/concepts/view-locator")]
 public class ViewLocator : IDataTemplate
 {
     public Control? Build(object? param)
@@ -25,29 +24,35 @@ public class ViewLocator : IDataTemplate
             return null;
         }
 
-        if (param is CandidateFeedbackViewModel)
+        Control? view = param switch
         {
-            return new CandidateFeedbackView();
-        }
+            LoginViewModel => new LoginView(),
+            PasswordResetViewModel => new PasswordResetView(),
+            AdminDashboardViewModel => new AdminDashboardView(),
+            CandidatePermissionViewModel => new CandidatePermissionView(),
+            CandidateRulesViewModel => new CandidateRulesView(),
+            CandidateLobbyViewModel => new CandidateLobbyView(),
+            CandidateInterviewViewModel => new CandidateInterviewView(),
+            CandidateFeedbackViewModel => new CandidateFeedbackView(),
+            CandidateResultViewModel => new CandidateResultView(),
+            _ => null,
+        };
 
-        var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
-        var type = Type.GetType(name) ?? param.GetType().Assembly.GetType(name);
-
-        if (type != null)
+        if (view is not null)
         {
-            return (Control)Activator.CreateInstance(type)!;
+            return view;
         }
 
         return new Border
         {
-            Background = new SolidColorBrush(Color.Parse("#7F1D1D")),
-            BorderBrush = new SolidColorBrush(Color.Parse("#B91C1C")),
+            Background = new SolidColorBrush(Color.Parse("#FEF2F2")),
+            BorderBrush = new SolidColorBrush(Color.Parse("#FCA5A5")),
             BorderThickness = new Thickness(1),
             Padding = new Thickness(12),
             Child = new TextBlock
             {
-                Foreground = Brushes.White,
-                Text = "View not found: " + name,
+                Foreground = new SolidColorBrush(Color.Parse("#991B1B")),
+                Text = "View not found for " + param.GetType().Name,
                 TextWrapping = TextWrapping.Wrap,
             },
         };

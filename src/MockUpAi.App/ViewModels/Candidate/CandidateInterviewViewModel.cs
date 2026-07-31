@@ -8,7 +8,6 @@ using MockUpAi.App.Services.Voice;
 using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.Core.Domain.Entities;
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace MockUpAi.App.ViewModels.Candidate;
 
@@ -21,8 +20,12 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private readonly ITranscriptionService _transcription;
     private readonly ICameraPreviewService _camera;
     private readonly IInterviewVoiceService _voice;
+    private readonly IRuntimeDiagnosticsService _diagnostics;
     private CancellationTokenSource? _liveCaptionCts;
     private DateTime? _recordingStartedAtUtc;
+    private byte[]? _lastRecordedWav;
+    private InterviewTimelineItem? _activeTimelineItem;
+    private string? _reviewQuestionId;
 
     [ObservableProperty]
     private string _jobRole = string.Empty;
@@ -32,6 +35,12 @@ public partial class CandidateInterviewViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _questionPrompt = string.Empty;
+
+    [ObservableProperty]
+    private string _questionMeta = "Preparing interview";
+
+    [ObservableProperty]
+    private string _questionTopic = "Setup";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SubmitAnswerCommand))]
@@ -53,9 +62,19 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     private double _runningScore;
 
     [ObservableProperty]
+    private double _interviewProgressPercent;
+
+    [ObservableProperty]
+    private string _progressSummary = "0 of 0 answered";
+
+    [ObservableProperty]
+    private string _workflowProgressText = "Device Check > Rules > Interview > Submitted";
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SubmitAnswerCommand))]
     [NotifyCanExecuteChangedFor(nameof(StartRecordingCommand))]
     [NotifyCanExecuteChangedFor(nameof(StopRecordingAndTranscribeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RetryTranscriptionCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -79,7 +98,43 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     [ObservableProperty]
     private string _liveTranscriptLog = string.Empty;
 
+    [ObservableProperty]
+    private double _micInputLevel;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RetryTranscriptionCommand))]
+    private bool _hasRecordedAudio;
+
+    [ObservableProperty]
+    private string _interviewStage = "Setup";
+
+    [ObservableProperty]
+    private string _interviewerStatus = "Preparing interviewer";
+
+    [ObservableProperty]
+    private string _primaryActionHint = "Wait while the interview room is prepared.";
+
+    [ObservableProperty]
+    private bool _isInterviewerSpeaking;
+
+    [ObservableProperty]
+    private bool _isAnalyzingAnswer;
+
+    [ObservableProperty]
+    private bool _isSubmitConfirmationVisible;
+
+    [ObservableProperty]
+    private string _submitConfirmationMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _isTimelineOpen;
+
+    [ObservableProperty]
+    private bool _isReviewingPreviousAnswer;
+
     public ObservableCollection<InterviewChatMessage> ChatMessages { get; } = [];
+
+    public ObservableCollection<InterviewTimelineItem> TimelineItems { get; } = [];
 
     public CandidateInterviewViewModel(
         SessionContext sessionContext,
@@ -88,7 +143,8 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         IMicrophoneRecorderService microphone,
         ITranscriptionService transcription,
         ICameraPreviewService camera,
-        IInterviewVoiceService voice)
+        IInterviewVoiceService voice,
+        IRuntimeDiagnosticsService diagnostics)
     {
         _sessionContext = sessionContext;
         _workflowService = workflowService;
@@ -97,10 +153,12 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         _transcription = transcription;
         _camera = camera;
         _voice = voice;
+        _diagnostics = diagnostics;
     }
 
     public async Task InitializeAsync()
     {
+        _voice.Stop();
         var candidate = _sessionContext.CurrentUser;
         if (candidate is null)
         {
@@ -108,39 +166,58 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             return;
         }
 
-        StatusMessage = "Preparing interview questions and voice...";
-        Feedback = "Please wait while your interview is prepared.";
-        RecordingStatus = "Setup in progress";
-        QuestionPrompt = "Preparing your first question...";
-
-        _camera.FrameReady -= OnCameraFrameReady;
-        _camera.FrameReady += OnCameraFrameReady;
-
-        _workflowService.Reset();
-        var start = await _workflowService.StartInterviewAsync(candidate);
-
-        JobRole = candidate.JobRole;
-        InterviewCategory = candidate.InterviewCategory.ToString();
-        _voice.SetVoiceProfile(candidate.InterviewerVoiceProfile);
-        TotalQuestions = _workflowService.GetTotalQuestionCount();
-        QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
-        RunningScore = 0;
-        Feedback = "Answer clearly and role-specifically for best scoring.";
-        StatusMessage = "Interview started.";
-        RecordingStatus = "Not recording";
-        ChatMessages.Clear();
-        LiveCaption = string.Empty;
-        LiveTranscriptLog = string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(start.IntroductionMessage))
+        IsBusy = true;
+        try
         {
-            AddInterviewerMessage(start.IntroductionMessage);
-            StatusMessage = "AI interviewer is introducing the session...";
-            _ = _voice.SpeakAsync(start.IntroductionMessage);
-        }
+            InterviewStage = "Setup";
+            QuestionMeta = "Preparing interview";
+            QuestionTopic = "Setup";
+            InterviewerStatus = "Preparing interviewer";
+            PrimaryActionHint = "Loading the role brief, camera, microphone, and local transcription.";
+            StatusMessage = "Preparing interview questions and voice...";
+            Feedback = "Please wait while your interview is prepared.";
+            RecordingStatus = "Setup in progress";
+            QuestionPrompt = "Preparing your first question...";
 
-        UpdateCurrentQuestion(_workflowService.GetCurrentQuestion());
-        await StartCameraAsync();
+            _camera.FrameReady -= OnCameraFrameReady;
+            _camera.FrameReady += OnCameraFrameReady;
+
+            _workflowService.Reset();
+            var start = await _workflowService.StartInterviewAsync(candidate);
+
+            JobRole = candidate.JobRole;
+            InterviewCategory = candidate.InterviewCategory.ToString();
+            _voice.SetVoiceProfile(candidate.InterviewerVoiceProfile);
+            TotalQuestions = _workflowService.GetTotalQuestionCount();
+            QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
+            RunningScore = 0;
+            RefreshProgress();
+            Feedback = "Use concrete examples: context, your action, technical tradeoff, and result.";
+            StatusMessage = _diagnostics.GetSummary();
+            RecordingStatus = "Not recording";
+            ChatMessages.Clear();
+            TimelineItems.Clear();
+            _activeTimelineItem = null;
+            IsTimelineOpen = false;
+            LiveCaption = "Live transcription is optimized for final accuracy. Record your full answer, then press Stop Recording.";
+            LiveTranscriptLog = string.Empty;
+            WarmUpTranscription();
+
+            await StartCameraAsync();
+
+            if (!string.IsNullOrWhiteSpace(start.IntroductionMessage))
+            {
+                AddInterviewerMessage(start.IntroductionMessage);
+                await SpeakInterviewerAsync(start.IntroductionMessage, "Welcoming you and explaining the interview flow");
+            }
+
+            await ShowQuestionAsync(_workflowService.GetCurrentQuestion());
+        }
+        finally
+        {
+            IsAnalyzingAnswer = false;
+            IsBusy = false;
+        }
     }
 
     private bool CanSubmitAnswer()
@@ -151,25 +228,38 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanSubmitAnswer))]
     private async Task SubmitAnswerAsync()
     {
+        if (IsReviewingPreviousAnswer && !string.IsNullOrWhiteSpace(_reviewQuestionId))
+        {
+            await ResubmitReviewedAnswerAsync(_reviewQuestionId);
+            return;
+        }
+
         IsBusy = true;
         try
         {
             var answerText = TranscriptInput.Trim();
             AddUserMessage(answerText);
+            InterviewStage = "Analyzing";
+            InterviewerStatus = "Thinking through your answer";
+            PrimaryActionHint = "Hold on while the interviewer reviews the answer and prepares the next move.";
             StatusMessage = "Analyzing your answer...";
-            Feedback = "Scoring answer quality, role fit, clarity, and keyword coverage.";
+            Feedback = "Reviewing answer quality, role fit, clarity, and keyword coverage.";
+            IsAnalyzingAnswer = true;
+            MarkActiveTimelineReviewing();
 
             var submission = await _workflowService.SubmitAnswerAsync(answerText);
-            Feedback = submission.Result.Feedback;
+            MarkActiveTimelineAnswered(submission.IsAdaptiveFollowUp, submission.Result.Feedback);
+            Feedback = BuildCandidateSafeFeedback(submission.Result.Feedback);
             RunningScore = submission.RunningScore;
+            RefreshProgress();
             TranscriptInput = string.Empty;
 
             if (!string.IsNullOrWhiteSpace(submission.EncouragementMessage))
             {
                 AddInterviewerMessage(submission.EncouragementMessage);
-                StatusMessage = $"Analysis complete. Current score: {submission.RunningScore:0.##}/100.";
+                StatusMessage = "Answer saved. Preparing the next prompt.";
                 await PauseForNaturalRhythmAsync(submission.EncouragementMessage, 250, 800);
-                _ = _voice.SpeakAsync(submission.EncouragementMessage);
+                await SpeakInterviewerAsync(submission.EncouragementMessage, "Giving feedback and deciding the next prompt");
             }
 
             if (submission.IsInterviewCompleted)
@@ -178,10 +268,16 @@ public partial class CandidateInterviewViewModel : ViewModelBase
                 return;
             }
 
+            if (submission.IsAdaptiveFollowUp)
+            {
+                Feedback = "The interviewer is asking a targeted follow-up so your answer can be clearer and more complete.";
+                StatusMessage = "Adaptive follow-up prepared from your last answer.";
+            }
+
             await PauseForNaturalRhythmAsync(submission.NextQuestion?.Prompt ?? string.Empty, 500, 1200);
             QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
-            UpdateCurrentQuestion(submission.NextQuestion);
-            StatusMessage = "Answer analyzed. Continue with the interviewer prompt.";
+            RefreshProgress();
+            await ShowQuestionAsync(submission.NextQuestion);
         }
         catch (Exception ex)
         {
@@ -212,8 +308,14 @@ public partial class CandidateInterviewViewModel : ViewModelBase
 
             IsRecording = true;
             _recordingStartedAtUtc = DateTime.UtcNow;
-            RecordingStatus = "Recording in progress...";
-            StatusMessage = "Speak your answer clearly.";
+            InterviewStage = "Recording";
+            InterviewerStatus = "Listening";
+            PrimaryActionHint = "Speak naturally. When your answer is complete, press Stop Recording.";
+            LiveCaption = "Recording... speak in full sentences. Final transcript will appear after Stop Recording.";
+            LiveTranscriptLog = string.Empty;
+            MicInputLevel = 0;
+            RecordingStatus = "Recording in progress. Keep the microphone close and reduce background noise.";
+            StatusMessage = "Speak your answer clearly, then press Stop Recording.";
             StartLiveCaptionLoop();
         }
         finally
@@ -230,6 +332,9 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         IsBusy = true;
         try
         {
+            InterviewStage = "Transcribing";
+            InterviewerStatus = "Processing your audio";
+            PrimaryActionHint = "Keep the window open while the transcript is prepared.";
             StopLiveCaptionLoop();
             var wav = await _microphone.StopRecordingAsync();
             IsRecording = false;
@@ -243,21 +348,9 @@ public partial class CandidateInterviewViewModel : ViewModelBase
                 return;
             }
 
-            RecordingStatus = $"Audio captured ({wav.Length / 1024.0:0.0} KB). Transcribing...";
-            var transcript = await _transcription.TranscribeWavAsync(wav, $"answer_{DateTime.UtcNow:yyyyMMddHHmmss}.wav");
-            if (string.IsNullOrWhiteSpace(transcript))
-            {
-                RecordingStatus = string.IsNullOrWhiteSpace(_transcription.LastError)
-                    ? "Audio was recorded, but transcription failed. Check the OpenAI key/network, or type the answer manually."
-                    : $"Audio was recorded, but transcription failed: {_transcription.LastError}";
-                StatusMessage = "Recording worked; speech-to-text did not return text.";
-                return;
-            }
-
-            TranscriptInput = transcript.Trim();
-            AppendToTranscriptLog(transcript.Trim());
-            RecordingStatus = "Transcription complete.";
-            StatusMessage = "Review transcript and submit answer.";
+            _lastRecordedWav = wav;
+            HasRecordedAudio = true;
+            await TranscribeAudioAsync(wav, isRetry: false);
         }
         catch (Exception ex)
         {
@@ -265,8 +358,201 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         }
         finally
         {
+            IsAnalyzingAnswer = false;
             IsBusy = false;
         }
+    }
+
+    private async Task ResubmitReviewedAnswerAsync(string questionId)
+    {
+        IsBusy = true;
+        try
+        {
+            var answerText = TranscriptInput.Trim();
+            InterviewStage = "Re-scoring";
+            InterviewerStatus = "Updating your previous answer";
+            PrimaryActionHint = "Saving the revised response without changing the current interview question.";
+            StatusMessage = "Updating your previous answer...";
+            Feedback = "Rechecking the revised answer against the same question rubric.";
+            IsAnalyzingAnswer = true;
+            MarkActiveTimelineReviewing();
+
+            var submission = await _workflowService.ResubmitAnswerAsync(questionId, answerText);
+            MarkActiveTimelineAnswered(false, submission.Result.Feedback);
+            if (_activeTimelineItem is not null)
+            {
+                _activeTimelineItem.CanReanswer = true;
+                _activeTimelineItem.IsReviewTarget = false;
+            }
+
+            AddUserMessage($"Updated answer for question {QuestionNumber}: {answerText}");
+            Feedback = BuildCandidateSafeFeedback(submission.Result.Feedback);
+            RunningScore = submission.RunningScore;
+            RefreshProgress();
+
+            IsReviewingPreviousAnswer = false;
+            _reviewQuestionId = null;
+            TranscriptInput = string.Empty;
+            LiveCaption = "Previous answer updated. Continue with the current question when ready.";
+            LiveTranscriptLog = string.Empty;
+            RecordingStatus = "Answer update saved.";
+            StatusMessage = "Previous answer updated. Returning to the current question.";
+
+            var currentQuestion = _workflowService.GetCurrentQuestion();
+            QuestionNumber = _workflowService.GetCurrentQuestionIndex() + 1;
+            UpdateCurrentQuestion(currentQuestion, updateTimeline: true, addChatMessage: false);
+            InterviewStage = currentQuestion is null ? "Complete" : "Answer";
+            InterviewerStatus = currentQuestion is null ? "All questions completed" : "Ready for your answer";
+            PrimaryActionHint = currentQuestion is null
+                ? "Submit the interview to save your final summary."
+                : "Continue with the current question, or use Track Progress to revise another answered question.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not update previous answer: {ex.Message}";
+        }
+        finally
+        {
+            IsAnalyzingAnswer = false;
+            IsBusy = false;
+        }
+    }
+
+    private bool CanRetryTranscription() => !IsBusy && !IsRecording && HasRecordedAudio;
+
+    [RelayCommand(CanExecute = nameof(CanRetryTranscription))]
+    private async Task RetryTranscriptionAsync()
+    {
+        if (_lastRecordedWav is null || _lastRecordedWav.Length <= 44)
+        {
+            RecordingStatus = "No previous audio is available to retry.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            await TranscribeAudioAsync(_lastRecordedWav, isRetry: true);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task TranscribeAudioAsync(byte[] wav, bool isRetry)
+    {
+        RecordingStatus = $"{(isRetry ? "Retrying" : "Audio captured")} ({wav.Length / 1024.0:0.0} KB). Transcribing with local Whisper...";
+        LiveCaption = "Processing final transcript. Keep this window open while local transcription finishes.";
+        InterviewStage = isRetry ? "Retrying transcript" : "Transcribing";
+        InterviewerStatus = "Converting speech to text";
+        PrimaryActionHint = "Review the transcript before submitting so the saved answer matches what you meant.";
+
+        using var timeoutCts = new CancellationTokenSource(GetTranscriptionTimeout());
+        try
+        {
+            var transcript = await _transcription.TranscribeWavAsync(
+                wav,
+                $"answer_{DateTime.UtcNow:yyyyMMddHHmmss}.wav",
+                timeoutCts.Token);
+
+            if (string.IsNullOrWhiteSpace(transcript))
+            {
+                RecordingStatus = string.IsNullOrWhiteSpace(_transcription.LastError)
+                    ? "Audio was recorded, but speech recognition could not produce a confident transcript. Type or correct the answer manually."
+                    : $"Audio was recorded, but transcription failed: {_transcription.LastError}";
+                LiveCaption = "No confident transcript produced. You can type the answer manually in the answer box.";
+                LiveTranscriptLog = string.Empty;
+                InterviewStage = "Manual answer";
+                InterviewerStatus = "Waiting for typed answer";
+                PrimaryActionHint = "Type your answer manually, then submit it.";
+                StatusMessage = "Recording worked; speech-to-text did not return reliable text.";
+                return;
+            }
+
+            var cleanedTranscript = CleanTranscript(transcript);
+            TranscriptInput = cleanedTranscript;
+            LiveCaption = cleanedTranscript;
+            LiveTranscriptLog = cleanedTranscript;
+            RecordingStatus = "Transcription complete. Ready for review.";
+            InterviewStage = "Review";
+            InterviewerStatus = "Waiting for your reviewed answer";
+            PrimaryActionHint = "Correct any transcript mistakes, then press Submit Answer.";
+            StatusMessage = "Review and correct the transcript if needed. Scoring starts only after Submit Answer.";
+        }
+        catch (OperationCanceledException)
+        {
+            RecordingStatus = "Transcription timed out. You can retry or type your answer manually.";
+            LiveCaption = "Local transcription took too long. Retry may work if the model was still warming up.";
+            InterviewStage = "Retry available";
+            InterviewerStatus = "Transcript timed out";
+            PrimaryActionHint = "Press Transcribe Again, or type your answer manually.";
+            StatusMessage = "Speech-to-text timed out; recording is saved for retry.";
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleTimeline()
+    {
+        IsTimelineOpen = !IsTimelineOpen;
+    }
+
+    [RelayCommand]
+    private void CloseTimeline()
+    {
+        IsTimelineOpen = false;
+    }
+
+    [RelayCommand]
+    private void ReviewTimelineQuestion(InterviewTimelineItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        if (IsBusy || IsRecording)
+        {
+            StatusMessage = "Finish the current recording or wait for processing before reviewing an earlier question.";
+            return;
+        }
+
+        if (!item.CanReanswer)
+        {
+            StatusMessage = "Only answered questions can be opened for re-answering.";
+            return;
+        }
+
+        var question = _workflowService.GetQuestionById(item.QuestionId);
+        var result = _workflowService.GetQuestionResult(item.QuestionId);
+        if (question is null || result is null)
+        {
+            StatusMessage = "That question is not available for review yet.";
+            return;
+        }
+
+        foreach (var timelineItem in TimelineItems)
+        {
+            timelineItem.IsReviewTarget = false;
+        }
+
+        item.IsReviewTarget = true;
+        _activeTimelineItem = item;
+        _reviewQuestionId = item.QuestionId;
+        IsReviewingPreviousAnswer = true;
+        IsTimelineOpen = false;
+
+        QuestionNumber = item.Number;
+        UpdateCurrentQuestion(question, updateTimeline: false, addChatMessage: false);
+        TranscriptInput = result.CandidateTranscript;
+        LiveCaption = result.CandidateTranscript;
+        LiveTranscriptLog = result.CandidateTranscript;
+        InterviewStage = "Re-answer";
+        InterviewerStatus = $"Reviewing question {item.Number}";
+        PrimaryActionHint = "Edit the previous answer, then press Submit Answer to replace it.";
+        RecordingStatus = "Editing previous answer. You can type changes or record a new answer.";
+        StatusMessage = "Previous question loaded. Submit Answer will update this answer and return you to the current question.";
+        Feedback = BuildCandidateSafeFeedback(result.Feedback);
     }
 
     [RelayCommand]
@@ -276,11 +562,24 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         {
             if (!_workflowService.HasActiveInterview())
             {
-                await _navigator.NavigateToCandidateFeedbackAsync();
+                await _navigator.NavigateToCandidateResultAsync();
                 return;
             }
 
-            StatusMessage = "Finishing interview and calculating final result...";
+            var answered = _workflowService.GetCurrentQuestionIndex();
+            var total = Math.Max(1, TotalQuestions);
+            if (answered < total)
+            {
+                SubmitConfirmationMessage =
+                    $"You have answered {answered} of {total} questions. Submit the interview now, or continue answering the remaining questions?";
+                IsSubmitConfirmationVisible = true;
+                return;
+            }
+
+            StatusMessage = "Submitting interview and saving your answers...";
+            InterviewStage = "Finalizing";
+            InterviewerStatus = "Submitting interview";
+            PrimaryActionHint = "Please wait while your interview is saved.";
             await CompleteInterviewAsync();
         }
         catch (Exception ex)
@@ -288,6 +587,28 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             StatusMessage = $"Could not complete interview cleanly: {ex.Message}";
             await _navigator.NavigateToCandidateResultAsync();
         }
+    }
+
+    [RelayCommand]
+    private void CancelSubmitInterview()
+    {
+        IsSubmitConfirmationVisible = false;
+        SubmitConfirmationMessage = string.Empty;
+        StatusMessage = "Interview submission cancelled. Continue when you are ready.";
+        InterviewerStatus = "Ready for your answer";
+        PrimaryActionHint = "Continue the interview, or submit again when you are finished.";
+    }
+
+    [RelayCommand]
+    private async Task ConfirmSubmitInterviewAsync()
+    {
+        IsSubmitConfirmationVisible = false;
+        SubmitConfirmationMessage = string.Empty;
+        StatusMessage = "Submitting interview and saving your answers...";
+        InterviewStage = "Finalizing";
+        InterviewerStatus = "Submitting interview";
+        PrimaryActionHint = "Please wait while your interview is saved.";
+        await CompleteInterviewAsync();
     }
 
     [RelayCommand]
@@ -300,6 +621,8 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     [RelayCommand]
     private async Task LogoutAsync()
     {
+        _voice.Stop();
+
         if (IsRecording)
         {
             StopLiveCaptionLoop();
@@ -316,6 +639,10 @@ public partial class CandidateInterviewViewModel : ViewModelBase
     {
         try
         {
+            _voice.Stop();
+            InterviewStage = "Finalizing";
+            InterviewerStatus = "Submitting interview";
+            PrimaryActionHint = "Saving the interview and preparing your submission summary.";
             if (IsRecording)
             {
                 StopLiveCaptionLoop();
@@ -328,12 +655,12 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             var session = await _workflowService.FinishInterviewAsync(finishCts.Token);
             _sessionContext.LastInterview = session;
 
-            StatusMessage = "Interview completed. Preparing feedback page...";
-            await _navigator.NavigateToCandidateFeedbackAsync();
+            StatusMessage = "Interview submitted. Preparing summary page...";
+            await _navigator.NavigateToCandidateResultAsync();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Interview completed. Feedback view failed to load: {ex.Message}";
+            StatusMessage = $"Interview completed. Summary view failed to load: {ex.Message}";
             try
             {
                 await _navigator.NavigateToCandidateResultAsync();
@@ -352,6 +679,9 @@ public partial class CandidateInterviewViewModel : ViewModelBase
 
     private async Task StartCameraAsync()
     {
+        _camera.FrameReady -= OnCameraFrameReady;
+        _camera.FrameReady += OnCameraFrameReady;
+        CameraStatus = "Starting camera...";
         var started = await _camera.StartAsync();
         CameraStatus = started ? "Camera live" : $"Camera unavailable: {_camera.LastError}";
     }
@@ -376,13 +706,184 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         });
     }
 
-    private void UpdateCurrentQuestion(InterviewQuestion? question)
+    private void UpdateCurrentQuestion(InterviewQuestion? question, bool updateTimeline = true, bool addChatMessage = true)
     {
         QuestionPrompt = question?.Prompt ?? "All questions completed.";
+        QuestionTopic = ResolveQuestionTopic(question);
+        QuestionMeta = question is null
+            ? "Interview complete"
+            : IsFollowUpQuestion(question)
+                ? $"Adaptive follow-up {Math.Max(1, QuestionNumber)} of {Math.Max(QuestionNumber, TotalQuestions)}"
+                : $"Question {Math.Max(1, QuestionNumber)} of {Math.Max(QuestionNumber, TotalQuestions)}";
+
         if (question is not null)
         {
-            AddInterviewerMessage(question.Prompt);
-            _ = _voice.SpeakAsync(question.Prompt);
+            if (updateTimeline)
+            {
+                SyncTimelineWithCurrentQuestion(question);
+            }
+
+            if (addChatMessage)
+            {
+                AddInterviewerMessage(question.Prompt);
+            }
+        }
+    }
+
+    private static string ResolveQuestionTopic(InterviewQuestion? question)
+    {
+        if (question is null)
+        {
+            return "Complete";
+        }
+
+        var section = ExtractHintValue(question.IdealAnswerHint, "Section");
+        if (!string.IsNullOrWhiteSpace(section))
+        {
+            return ToQuestionTopicLabel(section);
+        }
+
+        return InferQuestionTopic(question.Prompt);
+    }
+
+    private static string ExtractHintValue(string? hint, string key)
+    {
+        if (string.IsNullOrWhiteSpace(hint))
+        {
+            return string.Empty;
+        }
+
+        foreach (var part in hint.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var separatorIndex = part.IndexOf(':', StringComparison.Ordinal);
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var name = part[..separatorIndex].Trim();
+            if (name.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                return part[(separatorIndex + 1)..].Trim();
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ToQuestionTopicLabel(string section)
+    {
+        return section.Trim().ToLowerInvariant() switch
+        {
+            "api" => "API",
+            "hr" => "HR",
+            "oop" => "OOP",
+            "career" => "Career",
+            "project" => "Project",
+            "coding" => "Coding",
+            "database" => "Database",
+            "security" => "Security",
+            "testing" => "Testing",
+            "frontend" => "Frontend",
+            "followup" => "Follow-up",
+            "debugging" => "Debugging",
+            "reliability" => "Reliability",
+            "behavioral" => "Behavioral",
+            "management" => "Management",
+            "technical" => "Technical",
+            _ => "Interview",
+        };
+    }
+
+    private static string InferQuestionTopic(string? prompt)
+    {
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            return "Interview";
+        }
+
+        var text = prompt.ToLowerInvariant();
+        if (text.StartsWith("follow-up:") || text.Contains("follow-up"))
+        {
+            return "Follow-up";
+        }
+
+        if (text.Contains("project"))
+        {
+            return "Project";
+        }
+
+        if (text.Contains("coding") || text.Contains("array") || text.Contains("string"))
+        {
+            return "Coding";
+        }
+
+        if (text.Contains("oop") || text.Contains("interface") || text.Contains("class"))
+        {
+            return "OOP";
+        }
+
+        if (text.Contains("api") || text.Contains("endpoint"))
+        {
+            return "API";
+        }
+
+        if (text.Contains("database") || text.Contains("query") || text.Contains("index"))
+        {
+            return "Database";
+        }
+
+        if (text.Contains("security") || text.Contains("login") || text.Contains("authorization"))
+        {
+            return "Security";
+        }
+
+        return "Interview";
+    }
+
+    private async Task ShowQuestionAsync(InterviewQuestion? question)
+    {
+        UpdateCurrentQuestion(question);
+        if (question is null)
+        {
+            InterviewStage = "Complete";
+            InterviewerStatus = "All questions completed";
+            PrimaryActionHint = "Submit the interview to save your final summary.";
+            return;
+        }
+
+        var isFollowUp = IsFollowUpQuestion(question);
+        InterviewStage = isFollowUp ? "Follow-up" : "Listen";
+        PrimaryActionHint = isFollowUp
+            ? "This follow-up was generated from your previous answer. Add the missing detail clearly."
+            : "Listen to the interviewer prompt before recording your answer.";
+        await SpeakInterviewerAsync(question.Prompt, $"Asking question {QuestionNumber} of {TotalQuestions}");
+
+        InterviewStage = isFollowUp ? "Follow-up" : "Answer";
+        InterviewerStatus = isFollowUp ? "Ready for follow-up answer" : "Ready for your answer";
+        PrimaryActionHint = isFollowUp
+            ? "Answer the follow-up with the missing example, tradeoff, or technical detail."
+            : "Press Start Recording, answer with a concrete example, then review the transcript.";
+        StatusMessage = "Your turn. Record or type your answer when ready.";
+    }
+
+    private async Task SpeakInterviewerAsync(string text, string status)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        IsInterviewerSpeaking = true;
+        InterviewerStatus = status;
+        StatusMessage = status;
+        try
+        {
+            await _voice.SpeakAsync(text);
+        }
+        finally
+        {
+            IsInterviewerSpeaking = false;
         }
     }
 
@@ -402,6 +903,47 @@ public partial class CandidateInterviewViewModel : ViewModelBase
             BubbleBorder = "#D4DDE6",
             SenderColor = "#0F766E",
             BubbleAlignment = "Left",
+        });
+    }
+
+    private void WarmUpTranscription()
+    {
+        if (!OperatingSystem.IsWindows() || _transcription is not WhisperLocalTranscriptionService whisper)
+        {
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    RecordingStatus = "Preparing local Whisper transcription...";
+                });
+
+#pragma warning disable CA1416
+                await whisper.WarmUpAsync();
+#pragma warning restore CA1416
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (!IsRecording && !IsBusy)
+                    {
+                        RecordingStatus = "Local Whisper transcription ready.";
+                    }
+                });
+            }
+            catch
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (!IsRecording && !IsBusy)
+                    {
+                        RecordingStatus = "Local Whisper warm-up skipped; fallback transcription is available.";
+                    }
+                });
+            }
         });
     }
 
@@ -432,48 +974,34 @@ public partial class CandidateInterviewViewModel : ViewModelBase
 
         _ = Task.Run(async () =>
         {
-            string lastPublished = string.Empty;
             var silencePromptShown = false;
             while (!token.IsCancellationRequested && IsRecording)
             {
                 try
                 {
-                    await Task.Delay(2200, token);
+                    await Task.Delay(1000, token);
                     if (!silencePromptShown &&
                         _recordingStartedAtUtc.HasValue &&
-                        DateTime.UtcNow - _recordingStartedAtUtc.Value > TimeSpan.FromSeconds(8) &&
-                        string.IsNullOrWhiteSpace(LiveTranscriptLog))
+                        DateTime.UtcNow - _recordingStartedAtUtc.Value > TimeSpan.FromSeconds(8))
                     {
                         silencePromptShown = true;
                         Dispatcher.UIThread.Post(() =>
                         {
-                            RecordingStatus = "Listening... start whenever you are ready, or type your answer manually.";
+                            RecordingStatus = "Still recording... keep speaking naturally, then press Stop Recording.";
                         });
                     }
 
-                    var snapshot = await _microphone.GetLiveWavSnapshotAsync(token);
-                    if (snapshot.Length < 12000)
+                    if (!_recordingStartedAtUtc.HasValue)
                     {
                         continue;
                     }
 
-                    var partial = await _transcription.TranscribeWavAsync(snapshot, $"live_{DateTime.UtcNow:yyyyMMddHHmmss}.wav", token);
-                    if (string.IsNullOrWhiteSpace(partial))
-                    {
-                        continue;
-                    }
-
-                    var cleaned = partial.Trim();
-                    if (cleaned.Equals(lastPublished, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    lastPublished = cleaned;
+                    var elapsed = DateTime.UtcNow - _recordingStartedAtUtc.Value;
+                    var level = _microphone.CurrentInputLevel * 100;
                     Dispatcher.UIThread.Post(() =>
                     {
-                        LiveCaption = cleaned;
-                        AppendToTranscriptLog(cleaned);
+                        MicInputLevel = level;
+                        LiveCaption = $"Recording... {elapsed:mm\\:ss}. Final transcript will appear after Stop Recording.";
                     });
                 }
                 catch (OperationCanceledException)
@@ -501,29 +1029,168 @@ public partial class CandidateInterviewViewModel : ViewModelBase
         _recordingStartedAtUtc = null;
     }
 
-    private void AppendToTranscriptLog(string line)
+    private static string CleanTranscript(string line)
     {
         if (string.IsNullOrWhiteSpace(line))
         {
-            return;
+            return string.Empty;
         }
 
-        if (LiveTranscriptLog.Contains(line, StringComparison.OrdinalIgnoreCase))
+        return string.Join(' ', line
+            .Split([' ', '\r', '\n', '\t'], StringSplitOptions.RemoveEmptyEntries))
+            .Trim();
+    }
+
+    private TimeSpan GetTranscriptionTimeout()
+    {
+        if (_transcription is WhisperLocalTranscriptionService whisper)
+        {
+#pragma warning disable CA1416
+            return TimeSpan.FromSeconds(whisper.TimeoutSeconds);
+#pragma warning restore CA1416
+        }
+
+        return TimeSpan.FromSeconds(75);
+    }
+
+    private void RefreshProgress()
+    {
+        var total = Math.Max(1, TotalQuestions);
+        var answered = Math.Clamp(_workflowService.GetCurrentQuestionIndex(), 0, total);
+        ProgressSummary = $"{answered} of {total} answered";
+        InterviewProgressPercent = Math.Round(answered * 100.0 / total, 2);
+    }
+
+    private void SyncTimelineWithCurrentQuestion(InterviewQuestion question)
+    {
+        var existing = TimelineItems.FirstOrDefault(item => item.QuestionId == question.Id);
+        if (existing is null)
+        {
+            existing = new InterviewTimelineItem
+            {
+                QuestionId = question.Id,
+                Number = TimelineItems.Count + 1,
+                Topic = ResolveQuestionTopic(question),
+                Title = BuildTimelineTitle(question),
+                IsFollowUp = IsFollowUpQuestion(question),
+            };
+            TimelineItems.Add(existing);
+        }
+
+        if (_activeTimelineItem is not null &&
+            _activeTimelineItem.QuestionId != existing.QuestionId &&
+            _activeTimelineItem.Status.Equals("Current", StringComparison.OrdinalIgnoreCase))
+        {
+            ApplyTimelineStatus(_activeTimelineItem, "Pending", "Waiting for answer", "#CBD5E1", "#F8FAFC", "#64748B");
+        }
+
+        _activeTimelineItem = existing;
+        ApplyTimelineStatus(
+            existing,
+            existing.IsFollowUp ? "Follow-up" : "Current",
+            existing.IsFollowUp ? "Adaptive prompt from previous answer" : "Ready for answer",
+            existing.IsFollowUp ? "#F59E0B" : "#2563EB",
+            existing.IsFollowUp ? "#FEF3C7" : "#DBEAFE",
+            existing.IsFollowUp ? "#92400E" : "#1D4ED8");
+    }
+
+    private void MarkActiveTimelineReviewing()
+    {
+        if (_activeTimelineItem is null)
         {
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(LiveTranscriptLog))
+        ApplyTimelineStatus(_activeTimelineItem, "Reviewing", "Answer is being analyzed", "#D97706", "#FEF3C7", "#92400E");
+    }
+
+    private void MarkActiveTimelineAnswered(bool followUpRequested, string feedback)
+    {
+        if (_activeTimelineItem is null)
         {
-            LiveTranscriptLog = line;
             return;
         }
 
-        var sb = new StringBuilder(LiveTranscriptLog.Length + line.Length + 2);
-        sb.Append(LiveTranscriptLog);
-        sb.AppendLine();
-        sb.Append(line);
-        LiveTranscriptLog = sb.ToString();
+        var skipped = feedback.Contains("skipped", StringComparison.OrdinalIgnoreCase);
+        if (skipped)
+        {
+            ApplyTimelineStatus(_activeTimelineItem, "Skipped", "Skipped by candidate", "#94A3B8", "#F1F5F9", "#475569");
+            _activeTimelineItem.CanReanswer = true;
+            return;
+        }
+
+        if (followUpRequested)
+        {
+            ApplyTimelineStatus(_activeTimelineItem, "Needs detail", "Follow-up generated", "#F59E0B", "#FEF3C7", "#92400E");
+            _activeTimelineItem.CanReanswer = true;
+            return;
+        }
+
+        ApplyTimelineStatus(_activeTimelineItem, "Answered", "Answer saved", "#10B981", "#D1FAE5", "#047857");
+        _activeTimelineItem.CanReanswer = true;
+    }
+
+    private static void ApplyTimelineStatus(
+        InterviewTimelineItem item,
+        string status,
+        string subtitle,
+        string accentBrush,
+        string badgeBackground,
+        string badgeForeground)
+    {
+        item.Status = status;
+        item.Subtitle = subtitle;
+        item.AccentBrush = accentBrush;
+        item.BadgeBackground = badgeBackground;
+        item.BadgeForeground = badgeForeground;
+    }
+
+    private static string BuildTimelineTitle(InterviewQuestion question)
+    {
+        var prompt = question.Prompt.Trim();
+        if (prompt.StartsWith("Follow-up:", StringComparison.OrdinalIgnoreCase))
+        {
+            prompt = prompt["Follow-up:".Length..].Trim();
+        }
+
+        const int maxLength = 78;
+        if (prompt.Length <= maxLength)
+        {
+            return prompt;
+        }
+
+        var cut = prompt.LastIndexOf(' ', maxLength);
+        return $"{prompt[..(cut > 0 ? cut : maxLength)].TrimEnd('.', ',', ';')}...";
+    }
+
+    private static bool IsFollowUpQuestion(InterviewQuestion? question)
+    {
+        if (question is null)
+        {
+            return false;
+        }
+
+        return ExtractHintValue(question.IdealAnswerHint, "Section").Equals("followup", StringComparison.OrdinalIgnoreCase) ||
+               question.Prompt.StartsWith("Follow-up:", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string BuildCandidateSafeFeedback(string feedback)
+    {
+        if (string.IsNullOrWhiteSpace(feedback))
+        {
+            return "Answer saved. Continue with the next prompt when ready.";
+        }
+
+        var parts = feedback
+            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(part => !part.Contains("score", StringComparison.OrdinalIgnoreCase) &&
+                           !part.Contains("/100", StringComparison.OrdinalIgnoreCase))
+            .Take(2)
+            .ToArray();
+
+        return parts.Length == 0
+            ? "Answer saved. Continue with the next prompt when ready."
+            : $"{string.Join(". ", parts)}.";
     }
 
     private static async Task PauseForNaturalRhythmAsync(string text, int minMs, int maxMs)

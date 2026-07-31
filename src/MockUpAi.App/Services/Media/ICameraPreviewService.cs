@@ -1,4 +1,5 @@
-﻿using Avalonia.Media.Imaging;
+using Avalonia.Media.Imaging;
+using MockUpAi.App.Models;
 
 namespace MockUpAi.App.Services.Media;
 
@@ -9,6 +10,12 @@ public interface ICameraPreviewService
     bool IsRunning { get; }
 
     string LastError { get; }
+
+    int SelectedDeviceIndex { get; }
+
+    Task<IReadOnlyList<MediaDeviceOption>> GetAvailableCamerasAsync(CancellationToken cancellationToken = default);
+
+    void SelectCamera(int deviceIndex);
 
     Task<bool> CanAccessCameraAsync();
 

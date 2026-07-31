@@ -1,7 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MockUpAi.App.Services;
 using MockUpAi.Core.Domain.Entities;
+using System.Collections.ObjectModel;
 
 namespace MockUpAi.App.ViewModels.Candidate;
 
@@ -10,43 +11,33 @@ public partial class CandidateResultViewModel : ViewModelBase
     private readonly IAppNavigator _navigator;
 
     [ObservableProperty]
-    private string _candidateId = string.Empty;
+    private string _submissionTitle = "Interview Submitted Successfully";
 
     [ObservableProperty]
-    private string _jobRole = string.Empty;
+    private string _submissionMessage = "Thank you. Your interview has been submitted and saved for admin review.";
 
     [ObservableProperty]
-    private double _interviewScore;
+    private string _candidateId = "Unknown";
 
     [ObservableProperty]
-    private double _roleFitScore;
+    private string _jobRole = "Unknown";
 
     [ObservableProperty]
-    private string _verdict = string.Empty;
+    private string _questionsSummary = "0 answered";
 
     [ObservableProperty]
-    private string _completedAt = string.Empty;
+    private string _completedAt = "-";
 
     [ObservableProperty]
-    private int _questionsAnswered;
+    private string _interviewType = "-";
 
     [ObservableProperty]
-    private double _passingScore = 60;
+    private string _submissionStatus = "Submitted";
 
     [ObservableProperty]
-    private double _technicalScore;
+    private string _adminReviewMessage = "Your detailed evaluation is available only to the admin panel.";
 
-    [ObservableProperty]
-    private double _communicationScore;
-
-    [ObservableProperty]
-    private double _depthScore;
-
-    [ObservableProperty]
-    private double _relevanceScore;
-
-    [ObservableProperty]
-    private string _improvementSummary = string.Empty;
+    public ObservableCollection<InterviewTimelineItem> TimelineItems { get; } = [];
 
     public CandidateResultViewModel(IAppNavigator navigator)
     {
@@ -58,37 +49,36 @@ public partial class CandidateResultViewModel : ViewModelBase
         var session = sessionContext.LastInterview;
         var candidate = sessionContext.CurrentUser;
 
-        if (session is null || candidate is null)
+        CandidateId = candidate?.UserId ?? session?.CandidateUserId ?? "Unknown";
+        JobRole = session?.JobRole ?? candidate?.JobRole ?? "Unknown";
+        TimelineItems.Clear();
+
+        if (session is null)
         {
-            CandidateId = "Unknown";
-            JobRole = "Unknown";
-            Verdict = "No interview data found.";
+            SubmissionTitle = "Interview Submission Status";
+            SubmissionMessage = "No completed interview session was found, but you can safely logout and ask the admin to verify the dashboard.";
+            QuestionsSummary = "No saved answers found";
             CompletedAt = "-";
-            InterviewScore = 0;
-            RoleFitScore = 0;
-            QuestionsAnswered = 0;
-            PassingScore = 60;
-            TechnicalScore = 0;
-            CommunicationScore = 0;
-            DepthScore = 0;
-            RelevanceScore = 0;
-            ImprovementSummary = string.Empty;
+            InterviewType = candidate?.InterviewCategory.ToString() ?? "-";
+            SubmissionStatus = "Not available";
+            AdminReviewMessage = "If you reached this page after finishing the interview, ask the admin to refresh the candidate dashboard.";
             return;
         }
 
-        CandidateId = candidate.UserId;
-        JobRole = session.JobRole;
-        InterviewScore = session.OverallScore;
-        RoleFitScore = session.RoleFitScore;
-        QuestionsAnswered = session.QuestionResults.Count;
-        PassingScore = session.PassingScore;
-        TechnicalScore = Average(session.QuestionResults.Select(x => x.TechnicalScore));
-        CommunicationScore = Average(session.QuestionResults.Select(x => x.CommunicationScore));
-        DepthScore = Average(session.QuestionResults.Select(x => x.DepthScore));
-        RelevanceScore = Average(session.QuestionResults.Select(x => x.RelevanceScore));
-        ImprovementSummary = BuildImprovementSummary(session);
-        CompletedAt = session.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-";
-        Verdict = BuildVerdict(session);
+        var answered = session.QuestionResults.Count;
+        var planned = Math.Max(session.PlannedQuestionCount, answered);
+        var completionLabel = answered >= planned
+            ? "All planned questions answered"
+            : "Submitted before all planned questions were answered";
+
+        SubmissionTitle = "Interview Submitted Successfully";
+        SubmissionMessage = "Thank you. Your interview has been saved and sent to the admin dashboard for review.";
+        QuestionsSummary = $"{answered} of {planned} answered";
+        CompletedAt = session.CompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        InterviewType = $"{session.Category} / {session.Difficulty}";
+        SubmissionStatus = completionLabel;
+        AdminReviewMessage = "You can now logout. The admin can review your detailed evaluation and feedback from the admin panel.";
+        BuildTimeline(session);
     }
 
     [RelayCommand]
@@ -97,43 +87,104 @@ public partial class CandidateResultViewModel : ViewModelBase
         await _navigator.LogoutAsync();
     }
 
-    private static string BuildVerdict(InterviewSession session)
+    private void BuildTimeline(InterviewSession session)
     {
-        if (session.OverallScore >= session.PassingScore + 15)
+        var index = 1;
+        foreach (var result in session.QuestionResults)
         {
-            return "Excellent performance. Strong recommendation.";
+            var isFollowUp = IsFollowUpResult(result);
+            var skipped = result.Feedback.Contains("skipped", StringComparison.OrdinalIgnoreCase);
+            TimelineItems.Add(new InterviewTimelineItem
+            {
+                QuestionId = result.QuestionId,
+                Number = index++,
+                Topic = isFollowUp ? "Follow-up" : ResolveQuestionTopic(result),
+                Title = BuildTimelineTitle(result.Prompt),
+                IsFollowUp = isFollowUp,
+                Status = skipped ? "Skipped" : "Answered",
+                Subtitle = isFollowUp ? "Adaptive follow-up saved" : "Saved for admin review",
+                AccentBrush = skipped ? "#94A3B8" : isFollowUp ? "#F59E0B" : "#10B981",
+                BadgeBackground = skipped ? "#F1F5F9" : isFollowUp ? "#FEF3C7" : "#D1FAE5",
+                BadgeForeground = skipped ? "#475569" : isFollowUp ? "#92400E" : "#047857",
+            });
         }
-
-        if (session.OverallScore >= session.PassingScore)
-        {
-            return "Passed. Good performance with minor gaps.";
-        }
-
-        if (session.OverallScore >= Math.Max(0, session.PassingScore - 10))
-        {
-            return "Average performance. Needs targeted preparation.";
-        }
-
-        return "Below benchmark. Recommend reskilling and retry.";
     }
 
-    private static double Average(IEnumerable<double> values)
+    private static bool IsFollowUpResult(InterviewQuestionResult result)
     {
-        var meaningful = values.Where(x => x > 0).ToList();
-        return meaningful.Count == 0 ? 0 : Math.Round(meaningful.Average(), 2);
+        return ExtractHintValue(result.IdealAnswerHint, "Section").Equals("followup", StringComparison.OrdinalIgnoreCase) ||
+               result.Prompt.StartsWith("Follow-up:", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string BuildImprovementSummary(InterviewSession session)
+    private static string ResolveQuestionTopic(InterviewQuestionResult result)
     {
-        var gaps = session.QuestionResults
-            .SelectMany(x => x.Gaps.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(4)
-            .ToList();
+        var section = ExtractHintValue(result.IdealAnswerHint, "Section");
+        if (!string.IsNullOrWhiteSpace(section))
+        {
+            return section.Trim().ToLowerInvariant() switch
+            {
+                "api" => "API",
+                "hr" => "HR",
+                "oop" => "OOP",
+                "career" => "Career",
+                "project" => "Project",
+                "coding" => "Coding",
+                "database" => "Database",
+                "security" => "Security",
+                "testing" => "Testing",
+                "frontend" => "Frontend",
+                "debugging" => "Debugging",
+                "reliability" => "Reliability",
+                "behavioral" => "Behavioral",
+                "management" => "Management",
+                "technical" => "Technical",
+                _ => "Interview",
+            };
+        }
 
-        return gaps.Count == 0
-            ? "Keep practicing with concrete examples, tradeoffs, and measurable outcomes."
-            : $"Focus areas: {string.Join(", ", gaps)}.";
+        return string.IsNullOrWhiteSpace(result.Topic) ? "Interview" : result.Topic;
+    }
+
+    private static string ExtractHintValue(string? hint, string key)
+    {
+        if (string.IsNullOrWhiteSpace(hint))
+        {
+            return string.Empty;
+        }
+
+        foreach (var part in hint.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var separatorIndex = part.IndexOf(':', StringComparison.Ordinal);
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var name = part[..separatorIndex].Trim();
+            if (name.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                return part[(separatorIndex + 1)..].Trim();
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string BuildTimelineTitle(string prompt)
+    {
+        var clean = string.IsNullOrWhiteSpace(prompt) ? "Interview question" : prompt.Trim();
+        if (clean.StartsWith("Follow-up:", StringComparison.OrdinalIgnoreCase))
+        {
+            clean = clean["Follow-up:".Length..].Trim();
+        }
+
+        const int maxLength = 78;
+        if (clean.Length <= maxLength)
+        {
+            return clean;
+        }
+
+        var cut = clean.LastIndexOf(' ', maxLength);
+        return $"{clean[..(cut > 0 ? cut : maxLength)].TrimEnd('.', ',', ';')}...";
     }
 }

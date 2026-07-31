@@ -1,10 +1,20 @@
-﻿namespace MockUpAi.App.Services.Media;
+using MockUpAi.App.Models;
+
+namespace MockUpAi.App.Services.Media;
 
 public interface IMicrophoneRecorderService
 {
     bool IsRecording { get; }
 
     string LastError { get; }
+
+    double CurrentInputLevel { get; }
+
+    int SelectedDeviceIndex { get; }
+
+    Task<IReadOnlyList<MediaDeviceOption>> GetAvailableMicrophonesAsync(CancellationToken cancellationToken = default);
+
+    void SelectMicrophone(int deviceIndex);
 
     Task<bool> CanAccessMicrophoneAsync();
 

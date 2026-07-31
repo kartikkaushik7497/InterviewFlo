@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using MockUpAi.App.Services;
 using MockUpAi.App.Services.Media;
 using MockUpAi.App.Services.Voice;
+using MockUpAi.Core.Application.Abstractions;
 using MockUpAi.App.ViewModels;
 using MockUpAi.App.ViewModels.Admin;
 using MockUpAi.App.ViewModels.Auth;
@@ -118,7 +119,22 @@ public partial class App : Application
 
         services.AddMockUpAiInfrastructure(configuration);
 
+        var openAiSettings = configuration.GetSection("OpenAi").Get<MockUpAi.Infrastructure.Configuration.OpenAiSettings>() ?? new MockUpAi.Infrastructure.Configuration.OpenAiSettings();
+        var azureSpeechSettings = configuration.GetSection("AzureSpeech").Get<MockUpAi.Infrastructure.Configuration.AzureSpeechSettings>() ?? new MockUpAi.Infrastructure.Configuration.AzureSpeechSettings();
+        var whisperSettings = configuration.GetSection("WhisperLocal").Get<WhisperLocalSettings>() ?? new WhisperLocalSettings();
+        var azureSpeechConfigured =
+            azureSpeechSettings.Enabled &&
+            !string.IsNullOrWhiteSpace(azureSpeechSettings.Region) &&
+            (!string.IsNullOrWhiteSpace(azureSpeechSettings.ApiKey) ||
+             !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("AZURE_SPEECH_KEY")));
+        var paidTranscriptionConfigured =
+            azureSpeechConfigured ||
+            (openAiSettings.Enabled &&
+             (!string.IsNullOrWhiteSpace(openAiSettings.ApiKey) ||
+              !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY"))));
+
         services.AddSingleton<IAppTelemetryService, AppTelemetryService>();
+        services.AddSingleton<IRuntimeDiagnosticsService, RuntimeDiagnosticsService>();
         services.AddSingleton<SessionContext>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IAppNavigator, AppNavigator>();
@@ -126,6 +142,19 @@ public partial class App : Application
         services.AddSingleton<IMicrophoneRecorderService, OpenAlMicrophoneRecorderService>();
         services.AddSingleton<ICameraPreviewService, OpenCvCameraPreviewService>();
         services.AddSingleton<IMediaPermissionService, MediaPermissionService>();
+        services.AddOptions<WhisperLocalSettings>().Bind(configuration.GetSection("WhisperLocal"));
+        if (!paidTranscriptionConfigured)
+        {
+            services.AddSingleton<WindowsSpeechTranscriptionService>();
+            if (whisperSettings.Enabled)
+            {
+                services.AddSingleton<ITranscriptionService, WhisperLocalTranscriptionService>();
+            }
+            else
+            {
+                services.AddSingleton<ITranscriptionService>(provider => provider.GetRequiredService<WindowsSpeechTranscriptionService>());
+            }
+        }
         services.AddOptions<ElevenLabsVoiceSettings>().Bind(configuration.GetSection("ElevenLabs"));
         services.AddSingleton<IInterviewVoiceService, WindowsInterviewVoiceService>();
 

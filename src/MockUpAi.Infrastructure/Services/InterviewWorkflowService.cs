@@ -15,6 +15,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
     private readonly List<InterviewQuestion> _questions = [];
     private IReadOnlyList<InterviewQuestion> _seedQuestions = [];
     private int _currentIndex;
+    private int _seedCursor;
 
     public InterviewWorkflowService(
         IInterviewAiService interviewAiService,
@@ -28,7 +29,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
 
     public async Task<InterviewStartResult> StartInterviewAsync(AppUser candidate, CancellationToken cancellationToken = default)
     {
-        const int plannedCount = 5;
+        const int plannedCount = 12;
 
         _seedQuestions = await _interviewAiService.GenerateQuestionsAsync(
             candidate.AiProvider,
@@ -36,7 +37,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             candidate.InterviewCategory,
             candidate.JobDescription,
             candidate.InterviewDifficulty,
-            count: 1,
+            count: plannedCount,
             cancellationToken);
 
         _session = new InterviewSession
@@ -56,6 +57,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
 
         _questions.Clear();
         _currentIndex = 0;
+        _seedCursor = 0;
 
         var intro = await _interviewAiService.GenerateProfessionalIntroductionAsync(
             candidate.AiProvider,
@@ -64,6 +66,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             candidate.InterviewCategory,
             candidate.InterviewDifficulty,
             cancellationToken);
+        intro = NormalizeIntro(intro);
 
         AddTurn("AI Interviewer", "intro", intro);
 
@@ -73,6 +76,7 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             IdealAnswerHint = "Concise background, relevant achievements, role alignment.",
         };
         _questions.Add(firstQuestion);
+        _seedCursor = _seedQuestions.Count > 0 ? 1 : 0;
         AddTurn("AI Interviewer", "question", firstQuestion.Prompt);
         _session.FlowState = InterviewFlowState.AskQuestion;
 
@@ -157,34 +161,41 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
 
         var runningScore = _session.QuestionResults.Average(x => x.ScoreAwarded);
         InterviewQuestion? nextQuestion = null;
+        var isAdaptiveFollowUp = false;
 
         if (_currentIndex < _session.PlannedQuestionCount)
         {
             _session.FlowState = InterviewFlowState.FollowUp;
-            if (!isSkip && turnDecision is not null)
+            var currentWasFollowUp = IsFollowUpQuestion(question);
+            if (!isSkip &&
+                !currentWasFollowUp &&
+                turnDecision is not null &&
+                turnDecision.ShouldAskClarification &&
+                !string.IsNullOrWhiteSpace(turnDecision.ClarificationPrompt))
             {
-                var prompt = turnDecision.ShouldAskClarification && !string.IsNullOrWhiteSpace(turnDecision.ClarificationPrompt)
-                    ? turnDecision.ClarificationPrompt
-                    : turnDecision.NextQuestion;
-
                 nextQuestion = new InterviewQuestion
                 {
-                    Prompt = prompt ?? turnDecision.NextQuestion,
-                    IdealAnswerHint = turnDecision.IdealAnswerHint,
+                    Prompt = $"Follow-up: {turnDecision.ClarificationPrompt}",
+                    IdealAnswerHint = EnsureHintMetadata(turnDecision.IdealAnswerHint, "followup", "medium"),
                 };
+                isAdaptiveFollowUp = true;
+            }
+            else
+            {
+                nextQuestion = GetNextSeedQuestion();
             }
 
             if (nextQuestion is null || string.IsNullOrWhiteSpace(nextQuestion.Prompt))
             {
-                nextQuestion = _seedQuestions.ElementAtOrDefault(_currentIndex) ?? new InterviewQuestion
+                nextQuestion = GetNextSeedQuestion() ?? new InterviewQuestion
                 {
-                    Prompt = "Please expand that with a concrete example from a real project.",
-                    IdealAnswerHint = "Real scenario, approach, decision, measurable impact.",
+                    Prompt = "Tell me about one technical challenge you solved in a project.",
+                    IdealAnswerHint = "Section:project; Expected:medium; Real scenario, approach, decision, measurable impact.",
                 };
             }
 
             _questions.Add(nextQuestion);
-            AddTurn("AI Interviewer", "question", nextQuestion.Prompt);
+            AddTurn("AI Interviewer", isAdaptiveFollowUp ? "followup" : "question", nextQuestion.Prompt);
             _session.FlowState = InterviewFlowState.AskQuestion;
         }
 
@@ -195,6 +206,99 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             IsInterviewCompleted = nextQuestion is null,
             RunningScore = Math.Round(runningScore, 2),
             EncouragementMessage = encouragement,
+            IsAdaptiveFollowUp = isAdaptiveFollowUp,
+        };
+    }
+
+    public async Task<InterviewSubmitResult> ResubmitAnswerAsync(string questionId, string transcript, CancellationToken cancellationToken = default)
+    {
+        if (_session is null || _questions.Count == 0)
+        {
+            throw new InvalidOperationException("Interview has not started.");
+        }
+
+        var questionIndex = _questions.FindIndex(question => question.Id.Equals(questionId, StringComparison.Ordinal));
+        if (questionIndex < 0)
+        {
+            throw new InvalidOperationException("Question is no longer available for review.");
+        }
+
+        var existingResultIndex = _session.QuestionResults.FindIndex(result => result.QuestionId.Equals(questionId, StringComparison.Ordinal));
+        if (existingResultIndex < 0)
+        {
+            throw new InvalidOperationException("Only answered questions can be re-submitted.");
+        }
+
+        var question = _questions[questionIndex];
+        var answerText = transcript.Trim();
+        _session.FlowState = InterviewFlowState.CandidateAnswer;
+        AddTurn("Candidate", "answer_revision", answerText);
+
+        var isSkip = IsSkipOrUnknownResponse(answerText);
+        double blendedScore;
+        bool isCorrect;
+        string encouragement;
+        InterviewTurnDecision? turnDecision = null;
+
+        if (isSkip)
+        {
+            blendedScore = 0;
+            isCorrect = false;
+            encouragement = "Updated. I will keep this one marked as skipped.";
+        }
+        else
+        {
+            turnDecision = await _turnOrchestrator.DecideNextTurnAsync(
+                _session.AiProvider,
+                _session,
+                question,
+                answerText,
+                questionIndex,
+                _session.PlannedQuestionCount,
+                cancellationToken);
+
+            blendedScore = Math.Round(turnDecision.OverallScore, 2);
+            isCorrect = blendedScore >= _session.PassingScore;
+            encouragement = "Updated answer saved.";
+        }
+
+        var result = new InterviewQuestionResult
+        {
+            QuestionId = question.Id,
+            Prompt = question.Prompt,
+            IdealAnswerHint = question.IdealAnswerHint,
+            CandidateTranscript = answerText,
+            IsCorrect = isCorrect,
+            ScoreAwarded = Math.Clamp(blendedScore, 0, 100),
+            TechnicalScore = turnDecision?.TechnicalScore ?? 0,
+            CommunicationScore = turnDecision?.CommunicationScore ?? 0,
+            DepthScore = turnDecision?.DepthScore ?? 0,
+            RelevanceScore = turnDecision?.RelevanceScore ?? 0,
+            ProblemSolvingScore = turnDecision?.ProblemSolvingScore ?? 0,
+            Topic = turnDecision?.Topic ?? string.Empty,
+            Strengths = turnDecision is null ? string.Empty : string.Join("; ", turnDecision.ObservedStrengths),
+            Gaps = turnDecision is null ? string.Empty : string.Join("; ", turnDecision.ObservedGaps),
+            Feedback = isSkip
+                ? "Updated and marked as skipped. Score: 0/100."
+                : $"{encouragement} {turnDecision?.EvaluationSummary}".Trim(),
+        };
+
+        _session.QuestionResults[existingResultIndex] = result;
+        AddTurn("AI Interviewer", "revision_acknowledgement", encouragement);
+        _session.FlowState = InterviewFlowState.AskQuestion;
+
+        var runningScore = _session.QuestionResults.Count == 0
+            ? 0
+            : _session.QuestionResults.Average(x => x.ScoreAwarded);
+
+        return new InterviewSubmitResult
+        {
+            Result = result,
+            NextQuestion = GetCurrentQuestion(),
+            IsInterviewCompleted = false,
+            RunningScore = Math.Round(runningScore, 2),
+            EncouragementMessage = encouragement,
+            IsAdaptiveFollowUp = false,
         };
     }
 
@@ -244,6 +348,16 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
 
     public int GetCurrentQuestionIndex() => _currentIndex;
 
+    public InterviewQuestion? GetQuestionById(string questionId)
+    {
+        return _questions.FirstOrDefault(question => question.Id.Equals(questionId, StringComparison.Ordinal));
+    }
+
+    public InterviewQuestionResult? GetQuestionResult(string questionId)
+    {
+        return _session?.QuestionResults.FirstOrDefault(result => result.QuestionId.Equals(questionId, StringComparison.Ordinal));
+    }
+
     public int GetTotalQuestionCount() => _session?.PlannedQuestionCount ?? _questions.Count;
 
     public bool HasActiveInterview() => _session?.Status == InterviewStatus.InProgress;
@@ -254,6 +368,26 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
         _questions.Clear();
         _seedQuestions = [];
         _currentIndex = 0;
+        _seedCursor = 0;
+    }
+
+    private InterviewQuestion? GetNextSeedQuestion()
+    {
+        if (_seedQuestions.Count == 0)
+        {
+            return null;
+        }
+
+        while (_seedCursor < _seedQuestions.Count)
+        {
+            var next = _seedQuestions[_seedCursor++];
+            if (!_questions.Any(question => question.Id == next.Id))
+            {
+                return next;
+            }
+        }
+
+        return null;
     }
 
     private void AddTurn(string speaker, string turnType, string text)
@@ -293,6 +427,82 @@ internal sealed class InterviewWorkflowService : IInterviewWorkflowService
             .Split([' ', ',', '.', ';', ':', '-', '_', '\n', '\r', '\t', '(', ')'], StringSplitOptions.RemoveEmptyEntries)
             .Where(x => x.Length > 2)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string EnsureHintMetadata(string hint, string section, string expected)
+    {
+        if (section.Equals("followup", StringComparison.OrdinalIgnoreCase))
+        {
+            var followUpBody = string.IsNullOrWhiteSpace(hint)
+                ? "Specific answer with context, action, technical detail, and outcome."
+                : hint.Trim();
+
+            return $"Section:followup; Expected:{expected}; {followUpBody}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(hint) &&
+            hint.Contains("Section:", StringComparison.OrdinalIgnoreCase) &&
+            hint.Contains("Expected:", StringComparison.OrdinalIgnoreCase))
+        {
+            return hint;
+        }
+
+        var body = string.IsNullOrWhiteSpace(hint)
+            ? "Specific answer with context, action, technical detail, and outcome."
+            : hint.Trim();
+
+        return $"Section:{section}; Expected:{expected}; {body}";
+    }
+
+    private static bool IsFollowUpQuestion(InterviewQuestion question)
+    {
+        return ExtractHintValue(question.IdealAnswerHint, "Section").Equals("followup", StringComparison.OrdinalIgnoreCase) ||
+               question.Prompt.StartsWith("Follow-up:", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ExtractHintValue(string? hint, string key)
+    {
+        if (string.IsNullOrWhiteSpace(hint))
+        {
+            return string.Empty;
+        }
+
+        foreach (var part in hint.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var separatorIndex = part.IndexOf(':', StringComparison.Ordinal);
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var name = part[..separatorIndex].Trim();
+            if (name.Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                return part[(separatorIndex + 1)..].Trim();
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string NormalizeIntro(string intro)
+    {
+        var clean = string.Join(' ', (intro ?? string.Empty)
+            .Split([' ', '\r', '\n', '\t'], StringSplitOptions.RemoveEmptyEntries));
+
+        if (string.IsNullOrWhiteSpace(clean))
+        {
+            return "Welcome. I will ask one focused question at a time and listen for clear, concrete answers.";
+        }
+
+        const int maxLength = 150;
+        if (clean.Length <= maxLength)
+        {
+            return clean;
+        }
+
+        var cut = clean.LastIndexOf(' ', maxLength);
+        return $"{clean[..(cut > 0 ? cut : maxLength)].TrimEnd('.')}.";
     }
 
     private static bool IsSkipOrUnknownResponse(string answerText)
